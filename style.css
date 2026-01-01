@@ -1,35 +1,78 @@
-window.templates = window.templates || {};
+* {
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
 
-templates.calculator = `
-  <h2>Calculator</h2>
+/* ===== PAGE ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #0f0f0f;
+  color: #ffffff;
+  overflow-y: auto; /* مهم برای اسکرول */
+}
 
-  <input id="calcDisplay" type="text" readonly style="width:160px;margin-bottom:8px;" />
+/* ===== APP CONTAINER ===== */
+#app {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh; /* باعث میشه صفحه خالی دیده نشه */
+}
 
-  <div>
-    <button onclick="calcPress('7')">7</button>
-    <button onclick="calcPress('8')">8</button>
-    <button onclick="calcPress('9')">9</button>
-    <button onclick="calcPress('/')">÷</button>
-  </div>
+/* ===== TITLE ===== */
+h1, h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-  <div>
-    <button onclick="calcPress('4')">4</button>
-    <button onclick="calcPress('5')">5</button>
-    <button onclick="calcPress('6')">6</button>
-    <button onclick="calcPress('*')">×</button>
-  </div>
+/* ===== TEXTAREA ===== */
+textarea {
+  width: 100%;
+  min-height: 140px;   /* به جای height */
+  resize: vertical;    /* کاربر بتونه بکشه */
+  background: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 16px;
+  outline: none;
+}
 
-  <div>
-    <button onclick="calcPress('1')">1</button>
-    <button onclick="calcPress('2')">2</button>
-    <button onclick="calcPress('3')">3</button>
-    <button onclick="calcPress('-')">−</button>
-  </div>
+textarea:focus {
+  border-color: #4CAF50;
+}
 
-  <div>
-    <button onclick="calcPress('0')">0</button>
-    <button onclick="calcClear()">C</button>
-    <button onclick="calcEqual()">=</button>
-    <button onclick="calcPress('+')">+</button>
-  </div>
-`;
+/* ===== BUTTON ===== */
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  font-size: 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* ===== LIST ===== */
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+}
+
+li {
+  background: #1e1e1e;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #333;
+}
