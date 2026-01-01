@@ -1,10 +1,14 @@
-// preview.js
 document.addEventListener("DOMContentLoaded", () => {
-  const app = Storage.load("currentApp");
-  if (!app) return;
+  const raw = localStorage.getItem("currentApp");
+  if (!raw) return;
 
-  document.body.innerHTML = app.ui;
+  const app = JSON.parse(raw);
+  const container = document.getElementById("app");
+  if (!container) return;
+
+  container.innerHTML = app.ui;
+
   const script = document.createElement("script");
-  script.innerHTML = app.logic;
+  script.textContent = app.logic;
   document.body.appendChild(script);
 });
