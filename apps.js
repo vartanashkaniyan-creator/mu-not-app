@@ -1,43 +1,6 @@
 function generateApp(name) {
   const apps = {
-    note() {
-      return {
-        ui: `
-          <h2>📝 Note</h2>
-          <textarea id="note"></textarea>
-          <button onclick="saveNote(document.getElementById('note').value)">💾 Save</button>
-          <button onclick="document.getElementById('note').value = loadNote()">📥 Load</button>
-        `,
-        logic: `
-          function saveNote(text) {
-            localStorage.setItem("note", text);
-          }
-
-          function loadNote() {
-            return localStorage.getItem("note") || "";
-          }
-        `
-      };
-    },
-
-    calculator() {
-      return {
-        ui: `
-          <h2>🧮 Calculator</h2>
-          <input id="a" type="number">
-          <input id="b" type="number">
-          <button onclick="calc()">+</button>
-          <p id="res"></p>
-        `,
-        logic: `
-          function calc() {
-            const aVal = Number(document.getElementById("a").value);
-            const bVal = Number(document.getElementById("b").value);
-            document.getElementById("res").innerText = aVal + bVal;
-          }
-        `
-      };
-    },
+    // اپ‌های قبلی: note و calculator...
 
     builder() {
       return {
@@ -46,9 +9,15 @@ function generateApp(name) {
           <label>App Name:</label>
           <input id="app-name" type="text" placeholder="MyApp">
 
-          <label>Select Features:</label><br>
+          <h3>📦 Features:</h3>
           <label><input type="checkbox" value="note" class="feature"> 📝 Note</label><br>
           <label><input type="checkbox" value="calculator" class="feature"> 🧮 Calculator</label><br>
+
+          <h3>🧠 Logic Blocks:</h3>
+          <label><input type="checkbox" value="input" class="logic"> 🔢 Input</label><br>
+          <label><input type="checkbox" value="output" class="logic"> 🧾 Output</label><br>
+          <label><input type="checkbox" value="if" class="logic"> ❓ If</label><br>
+          <label><input type="checkbox" value="loop" class="logic"> 🔁 Loop</label><br>
 
           <button onclick="generateAppCode()">Generate</button>
 
@@ -62,26 +31,25 @@ function generateApp(name) {
           function generateAppCode() {
             const name = document.getElementById("app-name").value || "MyApp";
             const features = Array.from(document.querySelectorAll(".feature:checked")).map(el => el.value);
-            let code = \`// \${name} - Combined App\\n\\n\`;
+            const logicBlocks = Array.from(document.querySelectorAll(".logic:checked")).map(el => el.value);
+            let code = \`// \${name} - Custom App\\n\\n\`;
             let previewHTML = "";
             let previewScript = "";
 
+            // Features
             features.forEach(f => {
               if (f === "note") {
-                code += \`// Note Feature\\nfunction saveNote(text) {
+                code += \`// Note\\nfunction saveNote(text) {
   localStorage.setItem("note", text);
 }\\nfunction loadNote() {
   return localStorage.getItem("note") || "";
 }\\n\\n\`;
-
                 previewHTML += \`
                   <h4>📝 Note</h4>
                   <textarea id="note"></textarea>
                   <button onclick="saveNote(document.getElementById('note').value)">💾 Save</button>
-                  <button onclick="document.getElementById('note').value = loadNote()">📥 Load</button>
-                  <hr>
+                  <button onclick="document.getElementById('note').value = loadNote()">📥 Load</button><hr>
                 \`;
-
                 previewScript += \`
                   function saveNote(text) {
                     localStorage.setItem("note", text);
@@ -93,18 +61,16 @@ function generateApp(name) {
               }
 
               if (f === "calculator") {
-                code += \`// Calculator Feature\\nfunction calc(a, b) {
+                code += \`// Calculator\\nfunction calc(a, b) {
   return a + b;
 }\\n\\n\`;
-
                 previewHTML += \`
                   <h4>🧮 Calculator</h4>
                   <input id="a" type="number">
                   <input id="b" type="number">
                   <button onclick="calc()">+</button>
-                  <p id="res"></p>
+                  <p id="res"></p><hr>
                 \`;
-
                 previewScript += \`
                   function calc() {
                     const aVal = Number(document.getElementById("a").value);
@@ -115,8 +81,41 @@ function generateApp(name) {
               }
             });
 
-            if (features.length === 0) {
-              code += "// No features selected.";
+            // Logic Blocks
+            logicBlocks.forEach(b => {
+              if (b === "input") {
+                code += \`// Input\\nlet userInput = prompt("Enter a value:");\\n\\n\`;
+                previewHTML += \`
+                  <h4>🔢 Input</h4>
+                  <input id="userInput" placeholder="Enter something">
+                  <hr>
+                \`;
+              }
+
+              if (b === "output") {
+                code += \`// Output\\nconsole.log("Result:", result);\\n\\n\`;
+                previewHTML += \`
+                  <h4>🧾 Output</h4>
+                  <p id="outputArea">Result will appear here</p>
+                  <button onclick="document.getElementById('outputArea').innerText = '✅ Done!'">Show Output</button><hr>
+                \`;
+              }
+
+              if (b === "if") {
+                code += \`// If\\nif (userInput === "hello") {
+  alert("Hi there!");
+}\\n\\n\`;
+              }
+
+              if (b === "loop") {
+                code += \`// Loop\\nfor (let i = 0; i < 3; i++) {
+  console.log("Loop", i);
+}\\n\\n\`;
+              }
+            });
+
+            if (features.length === 0 && logicBlocks.length === 0) {
+              code += "// No features or logic blocks selected.";
               previewHTML = "<p>No features selected.</p>";
             }
 
