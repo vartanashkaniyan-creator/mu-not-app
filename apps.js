@@ -46,11 +46,9 @@ function generateApp(name) {
           <label>App Name:</label>
           <input id="app-name" type="text" placeholder="MyApp">
 
-          <label>Select Feature:</label>
-          <select id="feature">
-            <option value="note">Note App</option>
-            <option value="calculator">Calculator</option>
-          </select>
+          <label>Select Features:</label><br>
+          <label><input type="checkbox" value="note" class="feature"> 📝 Note</label><br>
+          <label><input type="checkbox" value="calculator" class="feature"> 🧮 Calculator</label><br>
 
           <button onclick="generateAppCode()">Generate</button>
           <pre id="output" style="margin-top:20px; background:#1e1e1e; padding:12px; border-radius:8px;"></pre>
@@ -58,19 +56,25 @@ function generateApp(name) {
         logic: `
           function generateAppCode() {
             const name = document.getElementById("app-name").value || "MyApp";
-            const feature = document.getElementById("feature").value;
-            let code = "";
+            const features = Array.from(document.querySelectorAll(".feature:checked")).map(el => el.value);
+            let code = \`// \${name} - Combined App\\n\\n\`;
 
-            if (feature === "note") {
-              code = \`// \${name} - Note App\\nfunction saveNote(text) {
+            features.forEach(f => {
+              if (f === "note") {
+                code += \`// Note Feature\\nfunction saveNote(text) {
   localStorage.setItem("note", text);
-}\\n\\nfunction loadNote() {
+}\\nfunction loadNote() {
   return localStorage.getItem("note") || "";
-}\`;
-            } else if (feature === "calculator") {
-              code = \`// \${name} - Calculator App\\nfunction calc(a, b) {
+}\\n\\n\`;
+              } else if (f === "calculator") {
+                code += \`// Calculator Feature\\nfunction calc(a, b) {
   return a + b;
-}\`;
+}\\n\\n\`;
+              }
+            });
+
+            if (features.length === 0) {
+              code += "// No features selected.";
             }
 
             document.getElementById("output").innerText = code;
