@@ -3,38 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سازنده ۲۵ اپ موبایل</title>
+    <title data-i18n="app_name">سازنده اپ موبایل</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>🏗️ سازنده اپ موبایل</h1>
-        <p>ایجاد ۲۵ اپ کاربردی با دستورات فارسی</p>
+        <h1 data-i18n="app_name">سازنده اپ موبایل</h1>
+        <p data-i18n="welcome_message">ایجاد ۲۵ اپ کاربردی با دستورات فارسی</p>
     </header>
     
     <div class="status-bar">
-        <span>📱 وضعیت: <span id="app-status">آماده</span></span>
+        <span>📱 <span data-i18n="status">وضعیت</span>: <span id="app-status" data-i18n="ready">آماده</span></span>
         <span>🔢 <span id="app-counter">۰/۲۵</span></span>
     </div>
     
     <main id="app">
         <div class="welcome-screen">
-            <h2>🎯 خوش آمدید</h2>
-            <p>برای شروع یکی از دستورات را انتخاب کنید:</p>
+            <h2 data-i18n="welcome">🎯 خوش آمدید</h2>
+            <p data-i18n="welcome_message">برای شروع یکی از دستورات را انتخاب کنید:</p>
             <div class="quick-actions">
-                <button onclick="runCommand('صفحه note')">📝 یادداشت</button>
-                <button onclick="runCommand('صفحه calculator')">🧮 ماشین حساب</button>
-                <button onclick="runCommand('صفحه todo')">✅ لیست کارها</button>
-                <button onclick="runCommand('صفحه home')">🏠 بازگشت</button>
+                <button onclick="runCommand('صفحه note')" data-i18n="notes">📝 یادداشت</button>
+                <button onclick="runCommand('صفحه calculator')" data-i18n="calculator">🧮 ماشین حساب</button>
+                <button onclick="runCommand('صفحه todo')" data-i18n="todo_list">✅ لیست کارها</button>
+                <button onclick="runCommand('صفحه timer')" data-i18n="timer">⏱️ تایمر</button>
+                <button onclick="runCommand('خانه')" data-i18n="home">🏠 خانه</button>
             </div>
         </div>
     </main>
     
     <div class="command-panel">
-        <input type="text" id="command-input" placeholder="مثال: صفحه note یا عنوان یادداشت‌های من" autocomplete="off">
-        <button onclick="executeCommand()" id="execute-btn">▶️ اجرای دستور</button>
+        <input type="text" id="command-input" 
+               data-i18n-placeholder="enter_command"
+               placeholder="مثال: صفحه note یا عنوان یادداشت‌های من" 
+               autocomplete="off">
+        <button onclick="executeCommand()" 
+                data-i18n="execute"
+                id="execute-btn">▶️ اجرا</button>
     </div>
+    
+    <!-- سیستم‌های اصلی -->
+    <script src="i18n.js"></script>
+    <script src="language-switcher.js"></script>
+    <script src="engine.js"></script>
+    <script src="main.js"></script>
     
     <script>
         // توابع عمومی
@@ -48,44 +60,30 @@
             const cmd = input.value.trim();
             if (!cmd) return;
             
-            // از موتور اصلی استفاده می‌کند
             if (window.runApp) {
                 window.runApp(cmd);
             } else {
-                alert('⚠️ موتور بارگذاری نشده است');
+                alert(window.t ? window.t('error') : 'خطا');
             }
             
             input.value = '';
             input.focus();
         }
         
-        // رویداد Enter
+        // Enter برای اجرا
         document.getElementById('command-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') executeCommand();
         });
         
-        // صادر کردن توابع
+        // صادر کردن
         window.runCommand = runCommand;
         window.executeCommand = executeCommand;
         
-        // بروزرسانی وضعیت
-        function updateStatus(text, count) {
-            document.getElementById('app-status').textContent = text;
-            if (count !== undefined) {
-                document.getElementById('app-counter').textContent = count + '/۲۵';
-            }
-        }
-        window.updateStatus = updateStatus;
-        
-        // مقداردهی اولیه
+        // شروع
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('command-input').focus();
-            updateStatus('آماده', 0);
+            console.log('🚀 برنامه بارگذاری شد');
         });
     </script>
-    
-    <!-- بارگذاری موتور اصلی -->
-    <script src="engine.js"></script>
-    <script src="main.js"></script>
 </body>
 </html>
