@@ -1,1105 +1,1060 @@
 /**
- * 🎨 سیستم رندر و مدیریت وضعیت
- * تبدیل schema به رابط کاربری
+ * 🚀 سیستم اصلی اجرای برنامه
+ * مدیریت ۲۵ اپلیکیشن + رابط کاربری + ذخیره‌سازی
  */
 
-// ==================== وضعیت برنامه ====================
-const AppState = {
-    current: null,
-    history: [],
-    data: {
-        notes: {},
-        todos: [],
-        calculator: {
-            display: '0',
-            history: []
-        },
-        timer: {
-            running: false,
-            startTime: 0,
-            elapsed: 0,
-            interval: null
-        }
+// ==================== سیستم مدیریت اپ‌ها ====================
+const AppManager = {
+    apps: {
+        // اپ‌های اصلی (۵ تای اول)
+        'note': { name: 'یادداشت حرفه‌ای', icon: '📝', category: 'ابزار', component: 'NoteApp' },
+        'calculator': { name: 'ماشین حساب مهندسی', icon: '🧮', category: 'ابزار', component: 'CalculatorApp' },
+        'todo': { name: 'لیست کارها', icon: '✅', category: 'کاربردی', component: 'TodoApp' },
+        'timer': { name: 'تایمر و کرنومتر', icon: '⏱️', category: 'ابزار', component: 'TimerApp' },
+        'weather': { name: 'هواشناسی', icon: '🌤️', category: 'کاربردی', component: 'WeatherApp' },
+        
+        // اپ‌های مالی
+        'expense': { name: 'مدیریت هزینه', icon: '💰', category: 'مالی', component: 'ExpenseApp' },
+        'budget': { name: 'بودجه‌بندی', icon: '📊', category: 'مالی' },
+        'currency': { name: 'مبدل ارز', icon: '💱', category: 'مالی' },
+        
+        // اپ‌های ابزاری
+        'flashlight': { name: 'چراغ قوه', icon: '🔦', category: 'ابزار' },
+        'compass': { name: 'قطب‌نما', icon: '🧭', category: 'ابزار' },
+        'measure': { name: 'خط‌کش دیجیتال', icon: '📏', category: 'ابزار' },
+        'qr': { name: 'ساخت QR کد', icon: '🔳', category: 'ابزار' },
+        'barcode': { name: 'خواندن بارکد', icon: '📷', category: 'ابزار' },
+        
+        // اپ‌های رسانه‌ای
+        'camera': { name: 'دوربین', icon: '📸', category: 'رسانه' },
+        'recorder': { name: 'ضبط صوت', icon: '🎤', category: 'رسانه' },
+        'music': { name: 'پخش موسیقی', icon: '🎵', category: 'رسانه' },
+        'paint': { name: 'نقاشی', icon: '🎨', category: 'رسانه' },
+        
+        // اپ‌های آموزشی
+        'translator': { name: 'مترجم', icon: '🌐', category: 'آموزشی' },
+        'dictionary': { name: 'فرهنگ لغت', icon: '📚', category: 'آموزشی' },
+        'converter': { name: 'مبدل واحدها', icon: '🔄', category: 'آموزشی' },
+        'formula': { name: 'فرمول‌های علمی', icon: '🧪', category: 'آموزشی' },
+        
+        // اپ‌های سلامت
+        'bmi': { name: 'محاسبه BMI', icon: '⚖️', category: 'سلامت' },
+        'health': { name: 'پیگیری سلامت', icon: '❤️', category: 'سلامت' },
+        'meditation': { name: 'مدیتیشن', icon: '🧘', category: 'سلامت' },
+        
+        // اپ‌های کاربردی
+        'alarm': { name: 'زنگ هشدار', icon: '⏰', category: 'کاربردی' },
+        'calendar': { name: 'تقویم', icon: '📅', category: 'کاربردی' },
+        'password': { name: 'مدیر رمز عبور', icon: '🔐', category: 'کاربردی' }
     },
     
-    // ذخیره وضعیت
-    save() {
-        try {
-            const state = {
-                current: this.current,
-                history: this.history.slice(-10), // 10 مورد آخر
-                data: this.data,
-                timestamp: Date.now()
-            };
-            localStorage.setItem('app_state', JSON.stringify(state));
-            console.log('💾 وضعیت ذخیره شد');
-        } catch (error) {
-            console.error('خطا در ذخیره وضعیت:', error);
+    // دریافت لیست اپ‌ها بر اساس دسته‌بندی
+    getAppsByCategory(category = 'all') {
+        if (category === 'all') {
+            return Object.entries(this.apps).map(([id, app]) => ({ id, ...app }));
         }
+        return Object.entries(this.apps)
+            .filter(([_, app]) => app.category === category)
+            .map(([id, app]) => ({ id, ...app }));
     },
     
-    // بارگذاری وضعیت
-    load() {
-        try {
-            const saved = localStorage.getItem('app_state');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                this.current = parsed.current;
-                this.history = parsed.history || [];
-                this.data = parsed.data || this.data;
-                console.log('📂 وضعیت بارگذاری شد');
+    // جستجوی اپ
+    searchApps(query) {
+        query = query.toLowerCase();
+        return Object.entries(this.apps)
+            .filter(([id, app]) => 
+                app.name.toLowerCase().includes(query) ||
+                app.category.toLowerCase().includes(query) ||
+                id.toLowerCase().includes(query)
+            )
+            .map(([id, app]) => ({ id, ...app }));
+    },
+    
+    // باز کردن اپ
+    openApp(appId, params = {}) {
+        const app = this.apps[appId];
+        if (!app) {
+            console.error('اپ یافت نشد:', appId);
+            return null;
+        }
+        
+        console.log(`📱 باز کردن اپ: ${app.name}`, params);
+        
+        // ثبت در تاریخچه
+        this.addToHistory(appId, params);
+        
+        // ایجاد نمونه اپ
+        if (app.component && window[app.component]) {
+            try {
+                const appInstance = new window[app.component](params);
+                return appInstance;
+            } catch (error) {
+                console.error('خطا در ایجاد اپ:', error);
+                return null;
             }
-        } catch (error) {
-            console.error('خطا در بارگذاری وضعیت:', error);
         }
+        
+        // اگر کامپوننت خاصی ندارد، صفحه عمومی بساز
+        return this.createGenericApp(app, params);
     },
     
-    // اضافه کردن به تاریخچه
-    addToHistory(command, result) {
-        this.history.push({
+    // ایجاد اپ عمومی
+    createGenericApp(app, params) {
+        return {
+            name: app.name,
+            icon: app.icon,
+            id: app.id || Date.now().toString(),
+            generateCode() {
+                return {
+                    html: this.generateHTML(),
+                    css: this.generateCSS(),
+                    js: this.generateJS()
+                };
+            },
+            generateHTML() {
+                return `
+                    <div class="app-container">
+                        <header class="app-header">
+                            <h1>${app.icon} ${app.name}</h1>
+                            <button class="back-btn" onclick="showHomePage()">← خانه</button>
+                        </header>
+                        <main class="app-content">
+                            <div class="app-placeholder">
+                                <div class="placeholder-icon">${app.icon}</div>
+                                <h2>${app.name}</h2>
+                                <p>این اپ در حال توسعه است و به زودی اضافه خواهد شد.</p>
+                                <p>دسته‌بندی: ${app.category}</p>
+                            </div>
+                        </main>
+                    </div>
+                `;
+            },
+            generateCSS() {
+                return `
+                    .app-container {
+                        padding: 20px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    .app-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 30px;
+                    }
+                    .app-placeholder {
+                        text-align: center;
+                        padding: 40px 20px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border-radius: 20px;
+                        color: white;
+                    }
+                    .placeholder-icon {
+                        font-size: 4rem;
+                        margin-bottom: 20px;
+                    }
+                `;
+            },
+            generateJS() {
+                return `
+                    console.log('اپ ${app.name} بارگذاری شد');
+                    // کدهای اختصاصی اپ
+                `;
+            }
+        };
+    },
+    
+    // تاریخچه
+    history: JSON.parse(localStorage.getItem('appHistory') || '[]'),
+    
+    addToHistory(appId, params) {
+        const app = this.apps[appId];
+        if (!app) return;
+        
+        const entry = {
             id: Date.now(),
-            command: command,
-            result: result.meta.type,
-            timestamp: new Date().toISOString()
-        });
-        
-        // محدود کردن تاریخچه
-        if (this.history.length > 50) {
-            this.history = this.history.slice(-50);
-        }
-        
-        this.save();
-    },
-    
-    // دریافت یادداشت‌ها
-    getNotes() {
-        return this.data.notes;
-    },
-    
-    // ذخیره یادداشت
-    saveNote(id, content) {
-        if (!content.trim()) return false;
-        
-        this.data.notes[id] = {
-            content: content,
-            created: Date.now(),
-            updated: Date.now()
+            appId,
+            appName: app.name,
+            timestamp: new Date().toISOString(),
+            params
         };
         
-        this.save();
-        return true;
-    },
-    
-    // حذف یادداشت
-    deleteNote(id) {
-        if (this.data.notes[id]) {
-            delete this.data.notes[id];
-            this.save();
-            return true;
-        }
-        return false;
-    },
-    
-    // مدیریت TODO
-    getTodos() {
-        return this.data.todos;
-    },
-    
-    addTodo(text) {
-        if (!text.trim()) return null;
+        this.history.unshift(entry);
         
-        const todo = {
-            id: Date.now(),
-            text: text,
-            completed: false,
-            created: Date.now()
-        };
-        
-        this.data.todos.unshift(todo);
-        this.save();
-        return todo;
-    },
-    
-    toggleTodo(id) {
-        const todo = this.data.todos.find(t => t.id === id);
-        if (todo) {
-            todo.completed = !todo.completed;
-            todo.updated = Date.now();
-            this.save();
-            return true;
-        }
-        return false;
-    },
-    
-    deleteTodo(id) {
-        const index = this.data.todos.findIndex(t => t.id === id);
-        if (index > -1) {
-            this.data.todos.splice(index, 1);
-            this.save();
-            return true;
-        }
-        return false;
-    },
-    
-    clearCompletedTodos() {
-        this.data.todos = this.data.todos.filter(t => !t.completed);
-        this.save();
-    },
-    
-    // ماشین حساب
-    getCalculatorState() {
-        return this.data.calculator;
-    },
-    
-    updateCalculator(value) {
-        this.data.calculator.display = value;
-        this.save();
-    },
-    
-    addToCalculatorHistory(expression, result) {
-        this.data.calculator.history.unshift({
-            expression,
-            result,
-            timestamp: Date.now()
-        });
-        
-        if (this.data.calculator.history.length > 20) {
-            this.data.calculator.history.pop();
+        // محدود کردن به ۲۰ مورد
+        if (this.history.length > 20) {
+            this.history.pop();
         }
         
-        this.save();
+        localStorage.setItem('appHistory', JSON.stringify(this.history));
+        this.updateHistoryDisplay();
     },
     
-    // تایمر
-    getTimerState() {
-        return this.data.timer;
-    },
-    
-    startTimer() {
-        if (this.data.timer.running) return;
+    updateHistoryDisplay() {
+        const historyList = document.getElementById('history-list');
+        if (!historyList) return;
         
-        this.data.timer.running = true;
-        this.data.timer.startTime = Date.now() - this.data.timer.elapsed;
-        
-        this.data.timer.interval = setInterval(() => {
-            this.data.timer.elapsed = Date.now() - this.data.timer.startTime;
-            this.updateTimerDisplay();
-        }, 100);
-        
-        this.save();
-    },
-    
-    pauseTimer() {
-        if (!this.data.timer.running) return;
-        
-        this.data.timer.running = false;
-        this.data.timer.elapsed = Date.now() - this.data.timer.startTime;
-        
-        if (this.data.timer.interval) {
-            clearInterval(this.data.timer.interval);
-            this.data.timer.interval = null;
-        }
-        
-        this.save();
-    },
-    
-    resetTimer() {
-        this.data.timer.running = false;
-        this.data.timer.elapsed = 0;
-        this.data.timer.startTime = 0;
-        
-        if (this.data.timer.interval) {
-            clearInterval(this.data.timer.interval);
-            this.data.timer.interval = null;
-        }
-        
-        this.updateTimerDisplay();
-        this.save();
-    },
-    
-    updateTimerDisplay() {
-        if (!this.data.timer) return;
-        
-        const elapsed = this.data.timer.elapsed;
-        const hours = Math.floor(elapsed / 3600000);
-        const minutes = Math.floor((elapsed % 3600000) / 60000);
-        const seconds = Math.floor((elapsed % 60000) / 1000);
-        
-        const display = 
-            String(hours).padStart(2, '0') + ':' +
-            String(minutes).padStart(2, '0') + ':' +
-            String(seconds).padStart(2, '0');
-        
-        // به‌روزرسانی نمایشگر
-        const displayEl = document.getElementById('timer_display');
-        if (displayEl) {
-            displayEl.textContent = display;
-        }
-    }
-};
-
-// ==================== سیستم رندر ====================
-const Renderer = {
-    // رندر اصلی
-    render(schema) {
-        if (!schema || !schema.schema) {
-            console.error('Schema نامعتبر');
+        if (this.history.length === 0) {
+            historyList.innerHTML = '<p class="empty-history">تاریخچه‌ای وجود ندارد</p>';
             return;
         }
         
-        const appContainer = document.getElementById('app');
-        if (!appContainer) return;
-        
-        // پاک کردن محتوای قبلی
-        appContainer.innerHTML = '';
-        
-        // ذخیره وضعیت فعلی
-        AppState.current = schema;
-        
-        // رندر عنوان
-        this.renderTitle(appContainer, schema.schema.title);
-        
-        // رندر کامپوننت‌ها
-        schema.schema.components.forEach(component => {
-            this.renderComponent(appContainer, component);
-        });
-        
-        // نمایش هشدارها
-        if (schema.meta && schema.meta.alerts && schema.meta.alerts.length > 0) {
-            this.showAlerts(schema.meta.alerts);
-        }
-        
-        // به‌روزرسانی وضعیت در نوار
-        this.updateStatusBar(schema);
-        
-        console.log('🎨 صفحه رندر شد:', schema.meta.type);
+        historyList.innerHTML = this.history.map((entry, index) => `
+            <div class="history-item" onclick="AppManager.openApp('${entry.appId}', ${JSON.stringify(entry.params)})">
+                <span class="history-index">${index + 1}.</span>
+                <span class="history-app">${entry.appName}</span>
+                <span class="history-time">${new Date(entry.timestamp).toLocaleTimeString('fa-IR')}</span>
+            </div>
+        `).join('');
     },
     
-    // رندر عنوان
-    renderTitle(container, title) {
-        const titleEl = document.createElement('h1');
-        titleEl.className = 'app-title';
-        titleEl.textContent = title;
-        container.appendChild(titleEl);
-    },
+    // آمار
+    stats: JSON.parse(localStorage.getItem('appStats') || '{"totalOpens": 0, "lastOpen": null}'),
     
-    // رندر کامپوننت بر اساس نوع
-    renderComponent(container, component) {
-        const { type } = component;
+    updateStats(appId) {
+        this.stats.totalOpens++;
+        this.stats.lastOpen = new Date().toISOString();
+        this.stats[appId] = (this.stats[appId] || 0) + 1;
         
-        switch (type) {
-            case 'welcome':
-                this.renderWelcome(container, component);
-                break;
-                
-            case 'quick_grid':
-                this.renderQuickGrid(container, component);
-                break;
-                
-            case 'command_input':
-                this.renderCommandInput(container, component);
-                break;
-                
-            case 'textarea':
-                this.renderTextarea(container, component);
-                break;
-                
-            case 'button':
-                this.renderButton(container, component);
-                break;
-                
-            case 'button_group':
-                this.renderButtonGroup(container, component);
-                break;
-                
-            case 'notes_list':
-                this.renderNotesList(container, component);
-                break;
-                
-            case 'todo_list':
-                this.renderTodoList(container, component);
-                break;
-                
-            case 'display':
-                this.renderDisplay(container, component);
-                break;
-                
-            case 'calc_grid':
-                this.renderCalcGrid(container, component);
-                break;
-                
-            case 'timer_display':
-                this.renderTimerDisplay(container, component);
-                break;
-                
-            case 'timer_controls':
-                this.renderTimerControls(container, component);
-                break;
-                
-            case 'input':
-                this.renderInput(container, component);
-                break;
-                
-            case 'stats':
-                this.renderStats(container, component);
-                break;
-                
-            case 'error_list':
-                this.renderErrorList(container, component);
-                break;
-                
-            case 'help_text':
-                this.renderHelpText(container, component);
-                break;
-                
-            case 'coming_soon':
-                this.renderComingSoon(container, component);
-                break;
-                
-            default:
-                console.warn('کامپوننت ناشناخته:', type);
-        }
+        localStorage.setItem('appStats', JSON.stringify(this.stats));
+        this.updateStatsDisplay();
     },
     
-    // ============ رندر کامپوننت‌های خاص ============
-    
-    renderWelcome(container, component) {
-        const div = document.createElement('div');
-        div.className = 'welcome-message';
-        div.innerHTML = `
-            <div class="welcome-content">
-                <p>${component.content}</p>
+    updateStatsDisplay() {
+        const statsEl = document.getElementById('app-stats');
+        if (!statsEl) return;
+        
+        const total = this.stats.totalOpens || 0;
+        const today = new Date().toDateString();
+        const todayOpens = Object.values(this.history)
+            .filter(h => new Date(h.timestamp).toDateString() === today)
+            .length;
+        
+        statsEl.innerHTML = `
+            <div class="stat-item">
+                <div class="stat-value">${total}</div>
+                <div class="stat-label">تعداد بازدیدها</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${todayOpens}</div>
+                <div class="stat-label">امروز</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${Object.keys(this.apps).length}</div>
+                <div class="stat-label">تعداد اپ‌ها</div>
             </div>
         `;
-        container.appendChild(div);
-    },
-    
-    renderQuickGrid(container, component) {
-        const grid = document.createElement('div');
-        grid.className = 'quick-grid';
-        
-        component.items.forEach(item => {
-            const button = document.createElement('button');
-            button.className = 'grid-item';
-            button.innerHTML = `
-                <span class="item-icon">${item.label.split(' ')[0]}</span>
-                <span class="item-text">${item.label.split(' ').slice(1).join(' ')}</span>
-            `;
-            button.onclick = () => {
-                if (window.runCommand) {
-                    window.runCommand(item.command);
-                }
-            };
-            grid.appendChild(button);
-        });
-        
-        container.appendChild(grid);
-    },
-    
-    renderCommandInput(container, component) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'command-input-wrapper';
-        wrapper.innerHTML = `
-            <input type="text" 
-                   class="command-input" 
-                   placeholder="${component.placeholder}"
-                   id="dynamic-command-input">
-            <button class="command-button" onclick="executeDynamicCommand()">
-                ${component.buttonText}
-            </button>
-        `;
-        container.appendChild(wrapper);
-    },
-    
-    renderTextarea(container, component) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'textarea-wrapper';
-        
-        const textarea = document.createElement('textarea');
-        textarea.id = component.id;
-        textarea.placeholder = component.placeholder || '';
-        textarea.rows = component.rows || 4;
-        textarea.className = 'app-textarea';
-        
-        // اگر یادداشت ذخیره‌شده‌ای دارد، بارگذاری کن
-        if (component.id === 'note_content' && AppState.current?.meta?.type === 'note') {
-            const notes = AppState.getNotes();
-            const latestNote = Object.values(notes)[0];
-            if (latestNote) {
-                textarea.value = latestNote.content;
-            }
-        }
-        
-        wrapper.appendChild(textarea);
-        container.appendChild(wrapper);
-    },
-    
-    renderButton(container, component) {
-        const button = document.createElement('button');
-        button.id = component.id;
-        button.className = 'app-button';
-        button.textContent = component.label;
-        
-        if (component.action) {
-            button.onclick = () => handleAction(component.action, component.id);
-        }
-        
-        container.appendChild(button);
-    },
-    
-    renderButtonGroup(container, component) {
-        const group = document.createElement('div');
-        group.className = 'button-group';
-        
-        component.buttons.forEach(btn => {
-            const button = document.createElement('button');
-            button.id = btn.id;
-            button.className = 'group-button';
-            button.textContent = btn.label;
-            
-            if (btn.action) {
-                button.onclick = () => handleAction(btn.action, btn.id);
-            }
-            
-            group.appendChild(button);
-        });
-        
-        container.appendChild(group);
-    },
-    
-    renderNotesList(container, component) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'notes-list-wrapper';
-        
-        const title = document.createElement('h3');
-        title.textContent = component.title;
-        title.className = 'list-title';
-        wrapper.appendChild(title);
-        
-        const list = document.createElement('div');
-        list.id = component.id;
-        list.className = 'notes-list';
-        
-        // بارگذاری یادداشت‌ها
-        const notes = AppState.getNotes();
-        const noteEntries = Object.entries(notes);
-        
-        if (noteEntries.length === 0) {
-            list.innerHTML = '<p class="empty-message">📝 هنوز یادداشتی وجود ندارد</p>';
-        } else {
-            noteEntries.sort((a, b) => b[1].updated - a[1].updated).forEach(([id, note]) => {
-                const noteEl = document.createElement('div');
-                noteEl.className = 'note-item';
-                noteEl.innerHTML = `
-                    <div class="note-content">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</div>
-                    <div class="note-actions">
-                        <button class="small-btn" onclick="loadNote('${id}')">📖 نمایش</button>
-                        <button class="small-btn delete-btn" onclick="deleteNote('${id}')">🗑️ حذف</button>
-                    </div>
-                `;
-                list.appendChild(noteEl);
-            });
-        }
-        
-        wrapper.appendChild(list);
-        container.appendChild(wrapper);
-    },
-    
-    renderTodoList(container, component) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'todo-list-wrapper';
-        
-        const list = document.createElement('div');
-        list.id = component.id;
-        list.className = 'todo-list';
-        
-        // بارگذاری TODOها
-        const todos = AppState.getTodos();
-        
-        if (todos.length === 0) {
-            list.innerHTML = '<p class="empty-message">✅ لیست کارها خالی است</p>';
-        } else {
-            todos.forEach(todo => {
-                const todoEl = document.createElement('div');
-                todoEl.className = `todo-item ${todo.completed ? 'completed' : ''}`;
-                todoEl.innerHTML = `
-                    <input type="checkbox" 
-                           ${todo.completed ? 'checked' : ''} 
-                           onchange="toggleTodo(${todo.id})"
-                           class="todo-checkbox">
-                    <span class="todo-text">${todo.text}</span>
-                    <button class="todo-delete" onclick="deleteTodoItem(${todo.id})">🗑️</button>
-                `;
-                list.appendChild(todoEl);
-            });
-        }
-        
-        wrapper.appendChild(list);
-        container.appendChild(wrapper);
-    },
-    
-    renderDisplay(container, component) {
-        const display = document.createElement('div');
-        display.className = 'calc-display';
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = component.id;
-        input.className = 'display-input';
-        input.value = component.value || '0';
-        input.readOnly = true;
-        
-        // اگر نمایشگر ماشین حساب است، مقدار ذخیره‌شده را بگذار
-        if (component.id === 'calc_display') {
-            const calcState = AppState.getCalculatorState();
-            input.value = calcState.display;
-        }
-        
-        display.appendChild(input);
-        container.appendChild(display);
-    },
-    
-    renderCalcGrid(container, component) {
-        const grid = document.createElement('div');
-        grid.className = 'calc-grid';
-        
-        component.rows.forEach(row => {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'calc-row';
-            
-            row.forEach(key => {
-                const button = document.createElement('button');
-                button.className = `calc-key ${['/', '*', '-', '+', '='].includes(key) ? 'calc-operator' : ''}`;
-                button.textContent = key;
-                button.onclick = () => handleCalculatorKey(key);
-                rowDiv.appendChild(button);
-            });
-            
-            grid.appendChild(rowDiv);
-        });
-        
-        container.appendChild(grid);
-    },
-    
-    renderTimerDisplay(container, component) {
-        const display = document.createElement('div');
-        display.className = 'timer-display';
-        
-        const time = document.createElement('div');
-        time.id = component.id;
-        time.className = 'time-text';
-        time.textContent = component.value;
-        
-        // به‌روزرسانی از وضعیت ذخیره‌شده
-        const timerState = AppState.getTimerState();
-        AppState.updateTimerDisplay();
-        
-        display.appendChild(time);
-        container.appendChild(display);
-    },
-    
-    renderTimerControls(container, component) {
-        this.renderButtonGroup(container, component);
-    },
-    
-    renderInput(container, component) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'input-with-button';
-        
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = component.id;
-        input.placeholder = component.placeholder || '';
-        input.className = 'app-input';
-        
-        const button = document.createElement('button');
-        button.className = 'input-button';
-        button.textContent = component.buttonText;
-        
-        if (component.id === 'todo_input') {
-            button.onclick = () => addTodoFromInput();
-            input.onkeypress = (e) => {
-                if (e.key === 'Enter') addTodoFromInput();
-            };
-        }
-        
-        wrapper.appendChild(input);
-        wrapper.appendChild(button);
-        container.appendChild(wrapper);
-    },
-    
-    renderStats(container, component) {
-        const stats = document.createElement('div');
-        stats.className = 'stats-container';
-        
-        component.items.forEach(stat => {
-            const statEl = document.createElement('div');
-            statEl.className = 'stat-item';
-            statEl.innerHTML = `
-                <div class="stat-label">${stat.label}</div>
-                <div class="stat-value">${stat.value}</div>
-            `;
-            stats.appendChild(statEl);
-        });
-        
-        container.appendChild(stats);
-    },
-    
-    renderErrorList(container, component) {
-        const list = document.createElement('div');
-        list.className = 'error-list';
-        
-        component.errors.forEach(error => {
-            const errorEl = document.createElement('div');
-            errorEl.className = 'error-item';
-            errorEl.innerHTML = `
-                <div class="error-line">خط ${error.line}:</div>
-                <div class="error-command">${error.command}</div>
-                <div class="error-suggestion">${error.suggestion}</div>
-            `;
-            list.appendChild(errorEl);
-        });
-        
-        container.appendChild(list);
-    },
-    
-    renderHelpText(container, component) {
-        const help = document.createElement('div');
-        help.className = 'help-text';
-        help.textContent = component.content;
-        container.appendChild(help);
-    },
-    
-    renderComingSoon(container, component) {
-        const soon = document.createElement('div');
-        soon.className = 'coming-soon';
-        soon.innerHTML = `
-            <div class="soon-icon">🚧</div>
-            <div class="soon-text">${component.message}</div>
-        `;
-        container.appendChild(soon);
-    },
-    
-    // ============ توابع کمکی ============
-    
-    showAlerts(alerts) {
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                if (window.showAlert) {
-                    window.showAlert(alert.message);
-                } else {
-                    alert(alert.message);
-                }
-            }, 300);
-        });
-    },
-    
-    updateStatusBar(schema) {
-        // به‌روزرسانی وضعیت
-        if (window.updateStatus) {
-            const type = schema.meta.type;
-            const title = schema.meta.title || '';
-            window.updateStatus(`${title} | ${type}`);
-        }
-        
-        // به‌روزرسانی شمارنده
-        const appCounter = document.getElementById('app-counter');
-        if (appCounter) {
-            const historyCount = AppState.history.length;
-            appCounter.textContent = `${historyCount}/۲۵`;
-        }
     }
 };
 
-// ==================== مدیریت اکشن‌ها ====================
-function handleAction(action, elementId) {
-    console.log('🔧 اکشن:', action, 'المنت:', elementId);
+// ==================== سیستم اجرای دستورات ====================
+const CommandEngine = {
+    patterns: {
+        // دستورات اصلی
+        'خانه|home|start|main': 'showHomePage',
+        'بازگشت|back|return': 'goBack',
+        
+        // دستورات اپ‌ها
+        'صفحه\\s+(.+)|اپ\\s+(.+)|برنامه\\s+(.+)': 'openAppPage',
+        'یادداشت|note|notes': 'openAppPage note',
+        'ماشین\\s+حساب|calculator|calc': 'openAppPage calculator',
+        'لیست\\s+کار|todo|کارها|tasks': 'openAppPage todo',
+        'تایمر|timer|کرنومتر|stopwatch': 'openAppPage timer',
+        'هوا|weather|آب\\s+وهوا': 'openAppPage weather',
+        
+        // دستورات جستجو
+        'جستجو\\s+(.+)|search\\s+(.+)': 'searchApps',
+        'دسته\\s+(.+)|category\\s+(.+)': 'filterByCategory',
+        
+        // دستورات مدیریتی
+        'تنظیمات|settings|options': 'openSettings',
+        'راهنما|help|کمک': 'openHelp',
+        'تاریخچه|history|log': 'showHistory',
+        'پاک\\s+کن|clear|پاکسازی': 'clearHistory',
+        
+        // دستورات توسعه
+        'کد\\s+(.+)|code\\s+(.+)': 'showAppCode',
+        'دمو\\s+(.+)|demo\\s+(.+)': 'runDemo',
+        'تست\\s+(.+)|test\\s+(.+)': 'runTest'
+    },
     
-    switch (action) {
-        case 'go_home':
-            runApp('خانه');
-            break;
-            
-        case 'save_note':
-            saveCurrentNote();
-            break;
-            
-        case 'load_note':
-            loadNoteFromStorage();
-            break;
-            
-        case 'clear_note':
-            clearNote();
-            break;
-            
-        case 'clear_calc':
-            clearCalculator();
-            break;
-            
-        case 'backspace':
-            calculatorBackspace();
-            break;
-            
-        case 'show_history':
-            showCalculatorHistory();
-            break;
-            
-        case 'clear_done':
-            clearCompletedTodos();
-            break;
-            
-        case 'clear_all':
-            clearAllTodos();
-            break;
-            
-        case 'start_timer':
-            AppState.startTimer();
-            break;
-            
-        case 'pause_timer':
-            AppState.pauseTimer();
-            break;
-            
-        case 'reset_timer':
-            AppState.resetTimer();
-            break;
-            
-        default:
-            console.warn('اکشن ناشناخته:', action);
-    }
-}
-
-// ==================== توابع اصلی ====================
-
-// اجرای برنامه
-function runApp(input) {
-    if (!input || typeof input !== 'string') {
-        console.error('ورودی نامعتبر');
-        return;
-    }
-    
-    // پردازش توسط موتور
-    const result = runEngine(input);
-    
-    // ذخیره در تاریخچه
-    AppState.addToHistory(input, result);
-    
-    // رندر نتیجه
-    Renderer.render(result);
-    
-    // به‌روزرسانی تایمر اگر فعال است
-    if (AppState.getTimerState().running) {
-        AppState.updateTimerDisplay();
-    }
-}
-
-// ==================== توابع مربوط به یادداشت ====================
-function saveCurrentNote() {
-    const textarea = document.getElementById('note_content');
-    if (!textarea) return;
-    
-    const content = textarea.value.trim();
-    if (!content) {
-        alert('⚠️ لطفاً متن یادداشت را وارد کنید');
-        return;
-    }
-    
-    const noteId = 'note_' + Date.now();
-    const success = AppState.saveNote(noteId, content);
-    
-    if (success) {
-        alert('✅ یادداشت ذخیره شد');
-        // رندر مجدد لیست
-        if (AppState.current?.meta?.type === 'note') {
-            runApp('صفحه note');
+    execute(command) {
+        console.log('🎯 اجرای دستور:', command);
+        
+        if (!command || command.trim() === '') {
+            return this.showError('لطفاً یک دستور وارد کنید');
         }
-    } else {
-        alert('❌ خطا در ذخیره یادداشت');
-    }
-}
-
-function loadNoteFromStorage() {
-    const notes = AppState.getNotes();
-    const latestNote = Object.values(notes)[0];
-    
-    if (latestNote) {
-        const textarea = document.getElementById('note_content');
-        if (textarea) {
-            textarea.value = latestNote.content;
-            alert('📝 آخرین یادداشت بارگذاری شد');
-        }
-    } else {
-        alert('📭 یادداشتی برای بارگذاری وجود ندارد');
-    }
-}
-
-function clearNote() {
-    if (confirm('آیا مطمئن هستید که می‌خواهید متن فعلی را پاک کنید؟')) {
-        const textarea = document.getElementById('note_content');
-        if (textarea) {
-            textarea.value = '';
-        }
-    }
-}
-
-function loadNote(id) {
-    const notes = AppState.getNotes();
-    const note = notes[id];
-    
-    if (note && window.runApp) {
-        const textarea = document.getElementById('note_content');
-        if (textarea) {
-            textarea.value = note.content;
-        }
-        alert('📖 یادداشت بارگذاری شد');
-    }
-}
-
-function deleteNote(id) {
-    if (confirm('آیا مطمئن هستید که می‌خواهید این یادداشت را حذف کنید؟')) {
-        const success = AppState.deleteNote(id);
-        if (success) {
-            if (AppState.current?.meta?.type === 'note') {
-                runApp('صفحه note');
+        
+        // نرمال‌سازی دستور
+        const normalized = command.toLowerCase().trim();
+        
+        // بررسی الگوها
+        for (const [pattern, action] of Object.entries(this.patterns)) {
+            const regex = new RegExp(pattern, 'i');
+            const match = command.match(regex);
+            
+            if (match) {
+                return this.handleAction(action, match, command);
             }
         }
-    }
-}
-
-// ==================== توابع مربوط به ماشین حساب ====================
-let calculatorExpression = '';
-
-function handleCalculatorKey(key) {
-    const display = document.getElementById('calc_display');
-    if (!display) return;
+        
+        // اگر الگویی پیدا نشد، سعی کن اپ را مستقیماً باز کنی
+        return this.tryDirectAppOpen(command);
+    },
     
-    if (key === '=') {
-        calculateResult();
-    } else if (key === 'C') {
-        clearCalculator();
-    } else if (key === '⌫') {
-        calculatorBackspace();
-    } else {
-        if (display.value === '0' && !['+', '-', '*', '/', '.'].includes(key)) {
-            display.value = key;
-        } else {
-            display.value += key;
+    handleAction(action, match, originalCommand) {
+        const params = match.slice(1).filter(Boolean);
+        
+        switch (action) {
+            case 'showHomePage':
+                return showHomePage();
+                
+            case 'openAppPage':
+                const appName = params[0] || params[1] || params[2];
+                return openAppPage(appName);
+                
+            case 'searchApps':
+                return searchApps(params[0]);
+                
+            case 'filterByCategory':
+                return filterByCategory(params[0]);
+                
+            case 'openSettings':
+                return openSettings();
+                
+            case 'openHelp':
+                return openHelp();
+                
+            case 'showHistory':
+                return showHistory();
+                
+            case 'clearHistory':
+                return clearHistory();
+                
+            case 'showAppCode':
+                return showAppCode(params[0]);
+                
+            case 'runDemo':
+                return runDemo(params[0]);
+                
+            case 'runTest':
+                return runTest(params[0]);
+                
+            default:
+                return this.tryDirectAppOpen(originalCommand);
         }
-        calculatorExpression = display.value;
-        AppState.updateCalculator(display.value);
-    }
-}
-
-function calculateResult() {
-    const display = document.getElementById('calc_display');
-    if (!display || !display.value.trim()) return;
+    },
     
-    try {
-        // جایگزینی نمادها
-        let expression = display.value
-            .replace(/÷/g, '/')
-            .replace(/×/g, '*');
+    tryDirectAppOpen(command) {
+        // حذف کلمات اضافی
+        const cleanCommand = command
+            .replace(/(باز|کن|اپ|برنامه|صفحه)\s+/g, '')
+            .trim();
         
-        // محاسبه ایمن
-        const result = Function('"use strict"; return (' + expression + ')')();
+        // جستجوی اپ
+        const foundApps = AppManager.searchApps(cleanCommand);
         
-        // گرد کردن
-        const rounded = Math.round(result * 100000000) / 100000000;
+        if (foundApps.length === 0) {
+            return this.showError(`دستور "${command}" شناخته نشد.`);
+        }
         
-        // ذخیره در تاریخچه
-        AppState.addToCalculatorHistory(display.value, rounded.toString());
+        if (foundApps.length === 1) {
+            return openAppPage(foundApps[0].id);
+        }
         
-        // نمایش نتیجه
-        display.value = rounded.toString();
-        calculatorExpression = rounded.toString();
-        AppState.updateCalculator(rounded.toString());
+        // اگر چندین اپ پیدا شد، لیست نشان بده
+        return this.showAppList(foundApps, command);
+    },
+    
+    showAppList(apps, originalCommand) {
+        const container = document.getElementById('app');
+        if (!container) return;
         
-    } catch (error) {
-        display.value = 'Error';
-        calculatorExpression = '';
-        AppState.updateCalculator('Error');
+        container.innerHTML = `
+            <div class="app-list-container">
+                <h2>🔍 چندین اپ پیدا شد برای: "${originalCommand}"</h2>
+                <div class="apps-grid">
+                    ${apps.map(app => `
+                        <div class="app-card" onclick="openAppPage('${app.id}')">
+                            <div class="app-icon">${app.icon}</div>
+                            <div class="app-name">${app.name}</div>
+                            <div class="app-category">${app.category}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="btn" onclick="showHomePage()">🏠 بازگشت به خانه</button>
+            </div>
+        `;
+    },
+    
+    showError(message) {
+        const container = document.getElementById('app');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="error-container">
+                <div class="error-icon">⚠️</div>
+                <h2>خطا در اجرای دستور</h2>
+                <p>${message}</p>
+                <div class="error-help">
+                    <p>دستورات معتبر:</p>
+                    <ul>
+                        <li><code>صفحه یادداشت</code> - باز کردن اپ یادداشت</li>
+                        <li><code>خانه</code> - بازگشت به صفحه اصلی</li>
+                        <li><code>جستجوی [نام]</code> - جستجوی اپ</li>
+                        <li><code>تنظیمات</code> - تنظیمات برنامه</li>
+                    </ul>
+                </div>
+                <button class="btn" onclick="showHomePage()">🏠 بازگشت به خانه</button>
+            </div>
+        `;
+    },
+    
+    // پیشنهادات هوشمند
+    getSuggestions(input) {
+        if (!input || input.length < 2) return [];
+        
+        const suggestions = [];
+        
+        // جستجو در اپ‌ها
+        const appMatches = AppManager.searchApps(input);
+        appMatches.forEach(app => {
+            suggestions.push({
+                text: `صفحه ${app.name}`,
+                command: `صفحه ${app.id}`,
+                type: 'app'
+            });
+        });
+        
+        // دستورات متداول
+        const commonCommands = [
+            'خانه', 'تنظیمات', 'راهنما', 'تاریخچه',
+            'صفحه یادداشت', 'صفحه ماشین حساب', 'صفحه لیست کارها'
+        ];
+        
+        commonCommands.forEach(cmd => {
+            if (cmd.includes(input) || input.includes(cmd)) {
+                suggestions.push({
+                    text: cmd,
+                    command: cmd,
+                    type: 'command'
+                });
+            }
+        });
+        
+        return suggestions.slice(0, 5); // فقط ۵ پیشنهاد
     }
+};
+
+// ==================== توابع اصلی رابط کاربری ====================
+
+// اجرای دستور
+function runApp(command) {
+    console.log('🚀 اجرای برنامه:', command);
+    
+    // به‌روزرسانی وضعیت
+    updateStatus(`در حال اجرا: ${command.substring(0, 30)}...`);
+    
+    // اجرای دستور
+    CommandEngine.execute(command);
+    
+    // ذخیره در تاریخچه دستورات
+    saveToCommandHistory(command);
+    
+    // فوکوس مجدد روی input
+    setTimeout(() => {
+        const input = document.getElementById('command-input');
+        if (input) input.focus();
+    }, 100);
 }
 
-function clearCalculator() {
-    const display = document.getElementById('calc_display');
-    if (display) {
-        display.value = '0';
-        calculatorExpression = '';
-        AppState.updateCalculator('0');
+// باز کردن صفحه اپ
+function openAppPage(appId) {
+    console.log(`📱 باز کردن صفحه اپ: ${appId}`);
+    
+    const app = AppManager.apps[appId];
+    if (!app) {
+        return showError(`اپ "${appId}" یافت نشد.`);
     }
+    
+    // پنهان کردن صفحه اصلی
+    const homePage = document.getElementById('home-page');
+    if (homePage) homePage.classList.remove('active');
+    
+    // نمایش صفحه اپ
+    const appPages = document.getElementById('app-pages');
+    if (appPages) {
+        appPages.classList.add('active');
+        appPages.innerHTML = '<div class="loading">در حال بارگذاری اپ...</div>';
+    }
+    
+    // ایجاد اپ
+    setTimeout(() => {
+        createApp(appId);
+    }, 300);
 }
 
-function calculatorBackspace() {
-    const display = document.getElementById('calc_display');
-    if (display && display.value.length > 1) {
-        display.value = display.value.slice(0, -1);
-        calculatorExpression = display.value;
-        AppState.updateCalculator(display.value);
-    } else if (display) {
-        display.value = '0';
-        calculatorExpression = '';
-        AppState.updateCalculator('0');
-    }
-}
-
-function showCalculatorHistory() {
-    const history = AppState.getCalculatorState().history;
-    if (history.length === 0) {
-        alert('📜 تاریخچه‌ای وجود ندارد');
+// ایجاد اپ
+function createApp(appId) {
+    const container = document.getElementById('app-pages');
+    if (!container) return;
+    
+    // ایجاد نمونه اپ
+    const appInstance = AppManager.openApp(appId);
+    if (!appInstance) {
+        container.innerHTML = `
+            <div class="app-error">
+                <h2>⚠️ خطا در ایجاد اپ</h2>
+                <p>متاسفانه اپ "${appId}" قابل بارگذاری نیست.</p>
+                <button class="btn" onclick="showHomePage()">🏠 بازگشت به خانه</button>
+            </div>
+        `;
         return;
     }
     
-    let message = '📜 تاریخچه محاسبات:\n\n';
-    history.forEach((item, index) => {
-        message += `${index + 1}. ${item.expression} = ${item.result}\n`;
+    // تولید کدهای اپ
+    const appCode = appInstance.generateCode();
+    
+    // نمایش HTML
+    container.innerHTML = appCode.html;
+    
+    // اضافه کردن CSS
+    const styleId = `app-style-${appId}`;
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = appCode.css;
+    
+    // اجرای JavaScript
+    const scriptId = `app-script-${appId}`;
+    let scriptEl = document.getElementById(scriptId);
+    if (scriptEl) scriptEl.remove();
+    
+    scriptEl = document.createElement('script');
+    scriptEl.id = scriptId;
+    scriptEl.textContent = appCode.js;
+    document.body.appendChild(scriptEl);
+    
+    // به‌روزرسانی وضعیت
+    updateStatus(`اپ ${appInstance.name} بارگذاری شد`);
+    AppManager.updateStats(appId);
+}
+
+// نمایش صفحه اصلی
+function showHomePage() {
+    console.log('🏠 بازگشت به صفحه اصلی');
+    
+    // پنهان کردن همه صفحات
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
     });
     
-    alert(message);
+    // نمایش صفحه اصلی
+    const homePage = document.getElementById('home-page');
+    if (homePage) homePage.classList.add('active');
+    
+    // به‌روزرسانی وضعیت
+    updateStatus('آماده');
+    
+    // بارگذاری اپ‌ها
+    renderAppGrid();
+    AppManager.updateHistoryDisplay();
+    AppManager.updateStatsDisplay();
 }
 
-// ==================== توابع مربوط به TODO ====================
-function addTodoFromInput() {
-    const input = document.getElementById('todo_input');
-    if (!input) return;
+// رندر شبکه اپ‌ها
+function renderAppGrid() {
+    const container = document.getElementById('apps-container');
+    if (!container) return;
     
-    const text = input.value.trim();
-    if (!text) {
-        alert('⚠️ لطفاً متن کار را وارد کنید');
+    const apps = AppManager.getAppsByCategory();
+    
+    container.innerHTML = apps.map((app, index) => `
+        <div class="app-card fade-in" 
+             style="animation-delay: ${index * 0.05}s"
+             onclick="openAppPage('${app.id}')"
+             data-category="${app.category}">
+            <div class="app-icon">${app.icon}</div>
+            <div class="app-name">${app.name}</div>
+            <div class="app-category">${app.category}</div>
+            ${app.component ? '<div class="app-badge">آماده</div>' : ''}
+        </div>
+    `).join('');
+}
+
+// فیلتر اپ‌ها بر اساس دسته‌بندی
+function filterByCategory(category) {
+    const apps = AppManager.getAppsByCategory(category);
+    const container = document.getElementById('apps-container');
+    if (!container) return;
+    
+    if (apps.length === 0) {
+        container.innerHTML = `
+            <div class="empty-category">
+                <p>📭 هیچ اپی در دسته "${category}" یافت نشد.</p>
+                <button class="btn" onclick="renderAppGrid()">نمایش همه اپ‌ها</button>
+            </div>
+        `;
         return;
     }
     
-    const todo = AppState.addTodo(text);
-    if (todo) {
-        input.value = '';
-        // رندر مجدد لیست
-        if (AppState.current?.meta?.type === 'todo') {
-            runApp('صفحه todo');
-        }
-    }
+    container.innerHTML = apps.map(app => `
+        <div class="app-card" onclick="openAppPage('${app.id}')">
+            <div class="app-icon">${app.icon}</div>
+            <div class="app-name">${app.name}</div>
+            <div class="app-category">${app.category}</div>
+        </div>
+    `).join('');
 }
 
-function toggleTodo(id) {
-    AppState.toggleTodo(id);
-    // به‌روزرسانی آمار
-    updateTodoStats();
-}
-
-function deleteTodoItem(id) {
-    if (confirm('آیا مطمئن هستید که می‌خواهید این کار را حذف کنید؟')) {
-        AppState.deleteTodo(id);
-        // رندر مجدد لیست
-        if (AppState.current?.meta?.type === 'todo') {
-            runApp('صفحه todo');
-        }
-    }
-}
-
-function clearCompletedTodos() {
-    if (confirm('آیا مطمئن هستید که می‌خواهید کارهای انجام شده را حذف کنید؟')) {
-        AppState.clearCompletedTodos();
-        if (AppState.current?.meta?.type === 'todo') {
-            runApp('صفحه todo');
-        }
-    }
-}
-
-function clearAllTodos() {
-    if (confirm('⚠️ آیا مطمئن هستید که می‌خواهید همه کارها را حذف کنید؟')) {
-        AppState.data.todos = [];
-        AppState.save();
-        if (AppState.current?.meta?.type === 'todo') {
-            runApp('صفحه todo');
-        }
-    }
-}
-
-function updateTodoStats() {
-    const todos = AppState.getTodos();
-    const total = todos.length;
-    const completed = todos.filter(t => t.completed).length;
-    const remaining = total - completed;
+// جستجوی اپ‌ها
+function searchApps(query) {
+    const results = AppManager.searchApps(query);
+    const container = document.getElementById('apps-container');
+    if (!container) return;
     
-    // به‌روزرسانی نمایشگر آمار
-    const stats = document.querySelectorAll('.stat-value');
-    if (stats.length >= 3) {
-        stats[0].textContent = total;
-        stats[1].textContent = completed;
-        stats[2].textContent = remaining;
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div class="search-results">
+                <h3>🔍 نتیجه‌ای برای "${query}" یافت نشد</h3>
+                <button class="btn" onclick="renderAppGrid()">نمایش همه اپ‌ها</button>
+            </div>
+        `;
+        return;
     }
+    
+    container.innerHTML = `
+        <div class="search-results">
+            <h3>🔍 نتایج جستجو برای "${query}":</h3>
+            <div class="apps-grid">
+                ${results.map(app => `
+                    <div class="app-card" onclick="openAppPage('${app.id}')">
+                        <div class="app-icon">${app.icon}</div>
+                        <div class="app-name">${app.name}</div>
+                        <div class="app-category">${app.category}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="btn" onclick="renderAppGrid()">← نمایش همه اپ‌ها</button>
+        </div>
+    `;
+}
+
+// نمایش تاریخچه
+function showHistory() {
+    const container = document.getElementById('app');
+    if (!container) return;
+    
+    const history = AppManager.history;
+    
+    container.innerHTML = `
+        <div class="history-container">
+            <h2>📜 تاریخچه اپ‌ها</h2>
+            <div class="history-stats">
+                <div class="stat">تعداد کل: ${history.length}</div>
+                <div class="stat">امروز: ${history.filter(h => 
+                    new Date(h.timestamp).toDateString() === new Date().toDateString()
+                ).length}</div>
+            </div>
+            <div class="history-list">
+                ${history.length === 0 ? 
+                    '<p class="empty-history">تاریخچه‌ای وجود ندارد</p>' : 
+                    history.map((entry, index) => `
+                        <div class="history-item" onclick="openAppPage('${entry.appId}')">
+                            <div class="history-index">${index + 1}.</div>
+                            <div class="history-app">${entry.appName}</div>
+                            <div class="history-time">
+                                ${new Date(entry.timestamp).toLocaleString('fa-IR')}
+                            </div>
+                        </div>
+                    `).join('')
+                }
+            </div>
+            <div class="history-actions">
+                <button class="btn" onclick="clearHistory()">🗑️ پاک کردن تاریخچه</button>
+                <button class="btn" onclick="showHomePage()">🏠 خانه</button>
+            </div>
+        </div>
+    `;
+}
+
+// پاک کردن تاریخچه
+function clearHistory() {
+    if (confirm('آیا مطمئن هستید که می‌خواهید تاریخچه را پاک کنید؟')) {
+        AppManager.history = [];
+        localStorage.setItem('appHistory', JSON.stringify([]));
+        showHistory();
+    }
+}
+
+// تنظیمات
+function openSettings() {
+    const container = document.getElementById('app');
+    if (!container) return;
+    
+    const isDark = document.body.classList.contains('dark-mode');
+    const lang = localStorage.getItem('language') || 'fa';
+    
+    container.innerHTML = `
+        <div class="settings-container">
+            <h2>⚙️ تنظیمات</h2>
+            
+            <div class="settings-section">
+                <h3>🎨 نمایش</h3>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" ${isDark ? 'checked' : ''} 
+                               onchange="toggleDarkMode()">
+                        حالت تاریک
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>🌐 زبان</h3>
+                <select class="language-select" onchange="changeLanguage(this.value)">
+                    <option value="fa" ${lang === 'fa' ? 'selected' : ''}>🇮🇷 فارسی</option>
+                    <option value="en" ${lang === 'en' ? 'selected' : ''}>🇺🇸 English</option>
+                </select>
+            </div>
+            
+            <div class="settings-section">
+                <h3>💾 ذخیره‌سازی</h3>
+                <div class="storage-info">
+                    <p>حجم ذخیره شده: ${calculateStorageSize()} KB</p>
+                    <button class="btn" onclick="clearStorage()">🗑️ پاک کردن داده‌ها</button>
+                </div>
+            </div>
+            
+            <div class="settings-actions">
+                <button class="btn" onclick="exportData()">📤 صادرات داده‌ها</button>
+                <button class="btn" onclick="showHomePage()">🏠 خانه</button>
+            </div>
+        </div>
+    `;
+}
+
+// راهنما
+function openHelp() {
+    const container = document.getElementById('app');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="help-container">
+            <h2>❓ راهنمای استفاده</h2>
+            
+            <div class="help-section">
+                <h3>🎯 دستورات اصلی</h3>
+                <div class="help-commands">
+                    <div class="command-item">
+                        <code>خانه</code>
+                        <span>بازگشت به صفحه اصلی</span>
+                    </div>
+                    <div class="command-item">
+                        <code>صفحه [نام اپ]</code>
+                        <span>باز کردن اپ خاص (مثال: صفحه یادداشت)</span>
+                    </div>
+                    <div class="command-item">
+                        <code>جستجو [کلمه]</code>
+                        <span>جستجوی اپ‌ها</span>
+                    </div>
+                    <div class="command-item">
+                        <code>دسته [نام دسته]</code>
+                        <span>فیلتر اپ‌ها بر اساس دسته</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>📱 اپ‌های موجود</h3>
+                <div class="apps-list">
+                    ${Object.entries(AppManager.apps).slice(0, 10).map(([id, app]) => `
+                        <div class="app-help-item">
+                            <span class="app-icon">${app.icon}</span>
+                            <span class="app-name">${app.name}</span>
+                            <code class="app-command">صفحه ${id}</code>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>🔧 نکات فنی</h3>
+                <ul>
+                    <li>می‌توانید روی اپ‌ها کلیک کنید یا از دستورات استفاده کنید</li>
+                    <li>از فلش بالا برای تکرار دستورات قبلی استفاده کنید</li>
+                    <li>Ctrl+K برای فوکوس روی جعبه دستورات</li>
+                    <li>اپ‌ها به صورت PWA قابل نصب هستند</li>
+                </ul>
+            </div>
+            
+            <button class="btn" onclick="showHomePage()">🏠 خانه</button>
+        </div>
+    `;
 }
 
 // ==================== توابع کمکی ====================
-function executeDynamicCommand() {
-    const input = document.getElementById('dynamic-command-input');
-    if (input && input.value.trim()) {
-        runApp(input.value);
-        input.value = '';
+
+// به‌روزرسانی وضعیت
+function updateStatus(text) {
+    const statusEl = document.getElementById('app-status');
+    if (statusEl) {
+        statusEl.textContent = text;
     }
 }
 
-function showAlert(message) {
-    // ساخت alert سفارشی
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'custom-alert';
-    alertDiv.innerHTML = `
-        <div class="alert-content">
-            <p>${message}</p>
-            <button onclick="this.parentElement.parentElement.remove()">OK</button>
+// ذخیره دستور در تاریخچه
+function saveToCommandHistory(command) {
+    let history = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+    history.unshift({
+        command: command,
+        timestamp: new Date().toISOString()
+    });
+    
+    if (history.length > 50) {
+        history = history.slice(0, 50);
+    }
+    
+    localStorage.setItem('commandHistory', JSON.stringify(history));
+}
+
+// نمایش اعلان
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()">✕</button>
         </div>
     `;
     
-    document.body.appendChild(alertDiv);
+    document.body.appendChild(notification);
     
-    // حذف خودکار بعد از 3 ثانیه
+    // حذف خودکار
     setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
+        if (notification.parentNode) {
+            notification.remove();
         }
     }, 3000);
+}
+
+// نمایش خطا
+function showError(message) {
+    showNotification(`❌ ${message}`, 'error');
+}
+
+// تغییر حالت تاریک
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+    
+    showNotification(`حالت ${isDark ? 'تاریک' : 'روشن'} فعال شد`);
+}
+
+// تغییر زبان
+function changeLanguage(lang) {
+    localStorage.setItem('language', lang);
+    showNotification('زبان تغییر کرد. صفحه در حال بارگذاری مجدد...');
+    setTimeout(() => location.reload(), 1000);
+}
+
+// محاسبه حجم ذخیره‌سازی
+function calculateStorageSize() {
+    let total = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            total += (localStorage[key].length * 2) / 1024; // به KB
+        }
+    }
+    return Math.round(total * 100) / 100;
+}
+
+// پاک کردن ذخیره‌سازی
+function clearStorage() {
+    if (confirm('⚠️ آیا مطمئن هستید؟ همه داده‌های ذخیره شده پاک خواهند شد.')) {
+        localStorage.clear();
+        showNotification('✅ همه داده‌ها پاک شدند');
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+// صادرات داده‌ها
+function exportData() {
+    const data = {
+        apps: AppManager.apps,
+        history: AppManager.history,
+        stats: AppManager.stats,
+        timestamp: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `app-builder-backup-${new Date().getTime()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('✅ داده‌ها با موفقیت صادر شدند');
 }
 
 // ==================== مقداردهی اولیه ====================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 برنامه در حال راه‌اندازی...');
     
-    // بارگذاری وضعیت ذخیره‌شده
-    AppState.load();
-    
-    // شروع با صفحه خانه
-    if (!AppState.current) {
-        runApp('خانه');
-    } else {
-        Renderer.render(AppState.current);
+    // بارگذاری تنظیمات
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
     }
     
-    // به‌روزرسانی تایمر اگر فعال است
-    if (AppState.getTimerState().running) {
-        AppState.startTimer(); // ادامه تایمر
+    // بارگذاری زبان
+    const lang = localStorage.getItem('language') || 'fa';
+    if (typeof changeLanguage === 'function') {
+        changeLanguage(lang);
     }
     
-    // فوکوس روی input دستورات
+    // بارگذاری تاریخچه
+    AppManager.updateHistoryDisplay();
+    AppManager.updateStatsDisplay();
+    
+    // رندر اپ‌ها
+    renderAppGrid();
+    
+    // رویدادهای کیبورد
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+K برای فوکوس روی دستور
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const input = document.getElementById('command-input');
+            if (input) input.focus();
+        }
+        
+        // Escape برای پاک کردن دستور
+        if (e.key === 'Escape') {
+            const input = document.getElementById('command-input');
+            if (input) input.value = '';
+        }
+        
+        // فلش بالا برای تاریخچه دستورات
+        if (e.key === 'ArrowUp' && e.target.id === 'command-input') {
+            e.preventDefault();
+            const history = JSON.parse(localStorage.getItem('commandHistory') || '[]');
+            if (history.length > 0) {
+                document.getElementById('command-input').value = history[0].command;
+            }
+        }
+    });
+    
+    // پیشنهادات هوشمند
     const commandInput = document.getElementById('command-input');
     if (commandInput) {
-        commandInput.focus();
+        commandInput.addEventListener('input', function(e) {
+            const suggestions = CommandEngine.getSuggestions(e.target.value);
+            showSuggestions(suggestions);
+        });
+        
+        commandInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
     }
     
-    console.log('✅ برنامه آماده است');
+    console.log('✅ برنامه آماده است. دستور بدهید!');
 });
 
 // ==================== صادر کردن توابع ====================
 window.runApp = runApp;
-window.handleAction = handleAction;
-window.saveCurrentNote = saveCurrentNote;
-window.loadNote = loadNote;
-window.deleteNote = deleteNote;
-window.addTodoFromInput = addTodoFromInput;
-window.toggleTodo = toggleTodo;
-window.deleteTodoItem = deleteTodoItem;
-window.clearCompletedTodos = clearCompletedTodos;
-window.clearAllTodos = clearAllTodos;
-window.executeDynamicCommand = executeDynamicCommand;
-window.showAlert = showAlert;
+window.openAppPage = openAppPage;
+window.showHomePage = showHomePage;
+window.filterByCategory = filterByCategory;
+window.searchApps = searchApps;
+window.showHistory = showHistory;
+window.clearHistory = clearHistory;
+window.openSettings = openSettings;
+window.openHelp = openHelp;
+window.toggleDarkMode = toggleDarkMode;
+window.showNotification = showNotification;
+window.showError = showError;
 
-window.AppState = AppState;
-window.Renderer = Renderer;
+window.AppManager = AppManager;
+window.CommandEngine = CommandEngine;
+
+// اجرای دستور از پنل پایین
+window.executeCommand = function() {
+    const input = document.getElementById('command-input');
+    if (input && input.value.trim()) {
+        runApp(input.value);
+        input.value = '';
+    }
+};
+
+// اجرای دستور سریع
+window.runCommand = function(command) {
+    if (command) {
+        document.getElementById('command-input').value = command;
+        executeCommand();
+    }
+};
+
+// تابع اجرای دستورات صوتی (شبیه‌سازی)
+window.startVoiceCommand = function() {
+    showNotification('🎤 در حال گوش دادن... دستور خود را بگویید');
+    
+    // شبیه‌سازی تشخیص صدا
+    setTimeout(() => {
+        const commands = [
+            'صفحه یادداشت',
+            'صفحه ماشین حساب',
+            'خانه',
+            'تنظیمات',
+            'راهنما'
+        ];
+        const randomCommand = commands[Math.floor(Math.random() * commands.length)];
+        
+        document.getElementById('command-input').value = randomCommand;
+        showNotification(`🎤 تشخیص: ${randomCommand}`);
+    }, 2000);
+};
+
+// نمایش پیشنهادات
+window.showSuggestions = function(suggestions) {
+    const container = document.getElementById('command-suggestions');
+    if (!container) return;
+    
+    if (suggestions.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(s => `
+        <div class="suggestion-item" onclick="runCommand('${s.command}')">
+            <span class="suggestion-text">${s.text}</span>
+            <span class="suggestion-type">${s.type === 'app' ? '📱' : '🎯'}</span>
+        </div>
+    `).join('');
+    
+    container.style.display = 'block';
+};
+
+// مخفی کردن پیشنهادات
+window.hideSuggestions = function() {
+    const container = document.getElementById('command-suggestions');
+    if (container) {
+        container.style.display = 'none';
+    }
+};
+
+// کلیک خارج از پیشنهادات
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#command-suggestions') && !e.target.closest('#command-input')) {
+        hideSuggestions();
+    }
+});
