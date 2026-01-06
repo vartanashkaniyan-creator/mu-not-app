@@ -1,16 +1,35 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced App Builder</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سازنده ۲۵ اپ موبایل</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div id="app"></div>
-
-  <script src="engine.js"></script>
-  <script src="main.js"></script>
+    <header>
+        <h1>🏗️ سازنده اپ</h1>
+        <p>۲۵ اپ - فقط موبایل</p>
+    </header>
+    
+    <div id="status">📱 آماده</div>
+    
+    <main id="app">
+        <!-- اپ‌ها اینجا نمایش داده می‌شوند -->
+    </main>
+    
+    <div class="commands">
+        <input id="cmd" placeholder="دستور فارسی..." />
+        <button onclick="run()">▶ اجرا</button>
+    </div>
+    
+    <script src="engine.js"></script>
+    <script src="main.js"></script>
+    <script>
+        function run() {
+            const cmd = document.getElementById('cmd').value;
+            if(cmd) runApp(cmd);
+        }
+    </script>
 </body>
 </html>
