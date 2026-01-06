@@ -1,43 +1,71 @@
-function goTo(page) {
-  location.hash = page;
-}
+/**
+ * 🧭 سیستم مسیریابی ساده
+ */
 
-function loadPage(page) {
-  const app = document.getElementById("app");
-  if (!app) return;
+const Router = {
+    // بارگذاری اپ
+    loadApp(appId) {
+        console.log('🧭 در حال بارگذاری اپ:', appId);
+        
+        // اگر generateApp موجود باشد (از app.js)
+        if (typeof generateApp === 'function') {
+            try {
+                const app = generateApp(appId);
+                if (app && app.ui) {
+                    this.renderApp(app);
+                    return;
+                }
+            } catch (err) {
+                console.error('خطا در بارگذاری اپ:', err);
+            }
+        }
+        
+        // اگر app.js کار نکرد، از سیستم اصلی استفاده کن
+        if (typeof App !== 'undefined' && App.openApp) {
+            App.openApp(appId);
+        }
+    },
+    
+    // رندر اپ
+    renderApp(app) {
+        const container = document.getElementById('app-container');
+        if (!container) return;
+        
+        // رندر UI
+        container.innerHTML = app.ui;
+        
+        // اجرای منطق
+        if (app.logic) {
+            try {
+                const script = document.createElement('script');
+                script.textContent = app.logic;
+                document.body.appendChild(script);
+                
+                // به‌روزرسانی وضعیت
+                if (App && App.updateStatus) {
+                    App.updateStatus('اپ اجرا شد');
+                }
+            } catch (err) {
+                console.error('خطا در اجرای منطق اپ:', err);
+            }
+        }
+    },
+    
+    // تغییر صفحه
+    navigateTo(page) {
+        window.location.hash = page;
+    }
+};
 
-  if (page === "home") {
-    app.innerHTML = `
-      <h2>🏠 Home</h2>
-      <button onclick="goTo('note')">📝 Note</button>
-      <button onclick="goTo('calculator')">🧮 Calculator</button>
-      <button onclick="goTo('builder')">🛠️ App Builder</button>
-    `;
-  } else if (page === "note") {
-    app.innerHTML = generateApp("note").ui;
-    injectLogic(generateApp("note").logic);
-  } else if (page === "calculator") {
-    app.innerHTML = generateApp("calculator").ui;
-    injectLogic(generateApp("calculator").logic);
-  } else if (page === "builder") {
-    app.innerHTML = generateApp("builder").ui;
-    injectLogic(generateApp("builder").logic);
-  } else {
-    app.innerHTML = "<h2>❌ Page not found</h2>";
-  }
-}
-
-function injectLogic(code) {
-  const script = document.createElement("script");
-  script.textContent = code;
-  document.body.appendChild(script);
-}
-
-// بارگذاری اولیه و هنگام تغییر مسیر
-window.addEventListener("DOMContentLoaded", () => {
-  loadPage(location.hash.slice(1) || "home");
+// هندلر تغییر hash
+window.addEventListener('hashchange', () => {
+    const page = window.location.hash.substring(1);
+    if (page && page !== 'home') {
+        Router.loadApp(page);
+    } else if (App && App.showHomePage) {
+        App.showHomePage();
+    }
 });
 
-window.addEventListener("hashchange", () => {
-  loadPage(location.hash.slice(1));
-});
+// صادر کردن
+window.Router = Router;
