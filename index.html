@@ -5,31 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سازنده ۲۵ اپ موبایل</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>🏗️ سازنده اپ</h1>
-        <p>۲۵ اپ - فقط موبایل</p>
+        <h1>🏗️ سازنده اپ موبایل</h1>
+        <p>ایجاد ۲۵ اپ کاربردی با دستورات فارسی</p>
     </header>
     
-    <div id="status">📱 آماده</div>
-    
-    <main id="app">
-        <!-- اپ‌ها اینجا نمایش داده می‌شوند -->
-    </main>
-    
-    <div class="commands">
-        <input id="cmd" placeholder="دستور فارسی..." />
-        <button onclick="run()">▶ اجرا</button>
+    <div class="status-bar">
+        <span>📱 وضعیت: <span id="app-status">آماده</span></span>
+        <span>🔢 <span id="app-counter">۰/۲۵</span></span>
     </div>
     
+    <main id="app">
+        <div class="welcome-screen">
+            <h2>🎯 خوش آمدید</h2>
+            <p>برای شروع یکی از دستورات را انتخاب کنید:</p>
+            <div class="quick-actions">
+                <button onclick="runCommand('صفحه note')">📝 یادداشت</button>
+                <button onclick="runCommand('صفحه calculator')">🧮 ماشین حساب</button>
+                <button onclick="runCommand('صفحه todo')">✅ لیست کارها</button>
+                <button onclick="runCommand('صفحه home')">🏠 بازگشت</button>
+            </div>
+        </div>
+    </main>
+    
+    <div class="command-panel">
+        <input type="text" id="command-input" placeholder="مثال: صفحه note یا عنوان یادداشت‌های من" autocomplete="off">
+        <button onclick="executeCommand()" id="execute-btn">▶️ اجرای دستور</button>
+    </div>
+    
+    <script>
+        // توابع عمومی
+        function runCommand(cmd) {
+            document.getElementById('command-input').value = cmd;
+            executeCommand();
+        }
+        
+        function executeCommand() {
+            const input = document.getElementById('command-input');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            
+            // از موتور اصلی استفاده می‌کند
+            if (window.runApp) {
+                window.runApp(cmd);
+            } else {
+                alert('⚠️ موتور بارگذاری نشده است');
+            }
+            
+            input.value = '';
+            input.focus();
+        }
+        
+        // رویداد Enter
+        document.getElementById('command-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') executeCommand();
+        });
+        
+        // صادر کردن توابع
+        window.runCommand = runCommand;
+        window.executeCommand = executeCommand;
+        
+        // بروزرسانی وضعیت
+        function updateStatus(text, count) {
+            document.getElementById('app-status').textContent = text;
+            if (count !== undefined) {
+                document.getElementById('app-counter').textContent = count + '/۲۵';
+            }
+        }
+        window.updateStatus = updateStatus;
+        
+        // مقداردهی اولیه
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('command-input').focus();
+            updateStatus('آماده', 0);
+        });
+    </script>
+    
+    <!-- بارگذاری موتور اصلی -->
     <script src="engine.js"></script>
     <script src="main.js"></script>
-    <script>
-        function run() {
-            const cmd = document.getElementById('cmd').value;
-            if(cmd) runApp(cmd);
-        }
-    </script>
 </body>
 </html>
