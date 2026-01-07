@@ -1,8 +1,10 @@
 // engine.js - ADVANCED OUTPUT ENABLED
 
+// ===== متغیرهای ذخیره داخلی =====
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-const vars = {}; // متغیرهای موقت
+const VARIABLES = new Map(); // ذخیره متغیرها
 
+// ===== نرمال‌سازی دستورات =====
 function normalize(cmd) {
   return (cmd || "")
     .toLowerCase()
@@ -10,12 +12,15 @@ function normalize(cmd) {
     .replace(/یادداشت/g, "note")
     .replace(/لیست/g, "list")
     .replace(/برو/g, "go")
+    .replace(/نمایش/g, "print")
     .trim();
 }
 
+// ===== موتور اصلی =====
 function runEngine(input) {
   let screen = "home";
   let output = [];
+
   const lines = (input || "")
     .split("\n")
     .map(l => normalize(l))
@@ -30,55 +35,41 @@ function runEngine(input) {
       screen = parts[1];
     }
 
-    // چاپ خروجی
-    else if (cmd === "print") {
-      const msg = parts.slice(1).join(" ");
-      output.push(msg);
+    // چاپ متن
+    if (cmd === "print") {
+      output.push(parts.slice(1).join(" "));
     }
 
-    // پاک کردن خروجی
-    else if (cmd === "clear") {
+    // پاکسازی خروجی
+    if (cmd === "clear") {
       output = [];
     }
 
-    // هشدار alert
-    else if (cmd === "alert") {
-      const msg = parts.slice(1).join(" ");
-      output.push(`[ALERT] ${msg}`);
-    }
-
-    // تعریف متغیر
-    else if (cmd === "set" && parts[1] && parts[2]) {
+    // ذخیره متغیر
+    if (cmd === "set" && parts[1]) {
       const key = parts[1];
-      const value = parts.slice(2).join(" ");
-      vars[key] = value;
-      output.push(`[SET] ${key} = ${value}`);
+      const value = parts.slice(2).join(" ") || "";
+      VARIABLES.set(key, value);
+      output.push(`✅ متغیر ${key} ذخیره شد`);
     }
 
-    // دریافت مقدار متغیر
-    else if (cmd === "get" && parts[1]) {
+    // بازیابی متغیر
+    if (cmd === "get" && parts[1]) {
       const key = parts[1];
-      const value = vars[key] || "";
-      output.push(`[GET] ${key} = ${value}`);
+      const val = VARIABLES.has(key) ? VARIABLES.get(key) : "<ناموجود>";
+      output.push(`${key} = ${val}`);
     }
 
-    // فراخوانی پلاگین
-    else if (cmd === "plugin" && parts[1] && window.PluginSystem) {
+    // اجرای پلاگین
+    if (cmd === "plugin" && parts[1] && window.PluginSystem) {
       const pluginName = parts[1];
       const result = window.PluginSystem.execute(pluginName, ...parts.slice(2));
-      output.push(`[PLUGIN:${pluginName}] ${result}`);
-    }
-
-    else {
-      output.push(`[UNKNOWN CMD] ${line}`);
+      output.push(`🔌 [${pluginName}]: ${result}`);
     }
   });
 
-  return {
-    screen,
-    output
-  };
+  return { screen, output };
 }
 
-// اجازه دسترسی به موتور از main.js
+// ===== اکسپورت به ویندوز =====
 window.runEngine = runEngine;
