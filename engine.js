@@ -1,6 +1,6 @@
-// engine.js - PHASE 2 (COMBINED COMMANDS + VARIABLES)
+// engine.js - مرحله ۳ (شرط، حلقه، متغیر، خروجی)
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-const VARIABLES = {};
+const variables = {};
 
 function normalize(cmd) {
   return (cmd || "")
@@ -15,50 +15,77 @@ function normalize(cmd) {
 function runEngine(input) {
   let screen = "home";
   let output = [];
+  const lines = (input || "")
+    .split("\n")
+    .map(l => normalize(l))
+    .filter(Boolean);
 
-  if (!input) return { screen, output };
-
-  // تقسیم دستورات با ; برای اجرای ترکیبی
-  const commands = input.split(";").map(c => normalize(c)).filter(Boolean);
-
-  commands.forEach(line => {
-    const parts = line.split(" ");
-    const cmd = parts[0];
-
-    // ===== متغیرها =====
-    if (cmd === "set" && parts[1] && parts[2] === "=") {
-      const varName = parts[1];
-      const varValue = parts.slice(3).join(" ");
-      VARIABLES[varName] = varValue;
+  lines.forEach(line => {
+    // ===== متغیر =====
+    if (line.startsWith("set ")) {
+      const match = line.match(/^set\s+\$(\w+)\s*=\s*(.+)$/);
+      if (match) variables[match[1]] = evalExpression(match[2]);
+      return;
     }
 
-    // جایگذاری متغیرها در دستورات
-    let processedLine = line.replace(/\$(\w+)/g, (_, v) => VARIABLES[v] || "");
-
-    // ===== دستورات صفحه =====
-    if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
-      screen = parts[1];
+    // ===== print =====
+    if (line.startsWith("print ")) {
+      const text = line.slice(6).replace(/\$(\w+)/g,(m,p)=>variables[p]||"");
+      output.push(text);
+      return;
     }
 
-    // ===== چاپ خروجی =====
-    if (cmd === "print") {
-      output.push(processedLine.replace(/^print\s*/, ""));
+    // ===== screen =====
+    if (line.startsWith("screen ") || line.startsWith("go ")) {
+      const parts = line.split(" ");
+      if (parts[1] && ALLOWED_SCREENS.has(parts[1])) screen = parts[1];
+      return;
     }
 
-    // ===== پاک کردن خروجی =====
-    if (cmd === "clear") {
-      output = [];
+    // ===== if / else =====
+    if (line.startsWith("if ")) {
+      const condMatch = line.match(/^if\s+(.+?);(.*)$/);
+      if (condMatch) {
+        const cond = condMatch[1];
+        const cmd = condMatch[2];
+        if (evalCondition(cond)) runEngine(cmd).output.forEach(o=>output.push(o));
+      }
+      return;
     }
 
-    // ===== پلاگین =====
-    if (cmd === "plugin" && parts[1] && window.PluginSystem) {
-      const result = window.PluginSystem.execute(parts[1]);
-      output.push(result);
+    // ===== for =====
+    if (line.startsWith("for ")) {
+      const match = line.match(/^for\s+\$(\w+)\s*=\s*(\d+)\s+to\s+(\d+);(.*)$/);
+      if (match) {
+        const varName = match[1];
+        const from = parseInt(match[2]);
+        const to = parseInt(match[3]);
+        const cmd = match[4];
+        for(let i=from;i<=to;i++){
+          variables[varName]=i;
+          runEngine(cmd).output.forEach(o=>output.push(o));
+        }
+      }
+      return;
     }
+
   });
 
   return { screen, output };
 }
 
+// ===== HELPER FUNCTIONS =====
+function evalExpression(expr){
+  try{
+    return eval(expr.replace(/\$(\w+)/g,(m,p)=>variables[p]||0));
+  }catch{return 0;}
+}
+
+function evalCondition(cond){
+  try{
+    return eval(cond.replace(/\$(\w+)/g,(m,p)=>variables[p]||0));
+  }catch{return false;}
+}
+
 window.runEngine = runEngine;
-window.VARIABLES = VARIABLES;
+window.variables = variables;
