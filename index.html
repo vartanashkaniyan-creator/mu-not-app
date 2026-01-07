@@ -3,48 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سازنده ۲۵ اپ موبایل</title>
+    <title>اپ ساز حرفه‌ای</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* loader ساده */
-        .loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; }
-        .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #4CAF50; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #command-section { margin: 20px 0; display: flex; gap: 10px; justify-content: center; }
-        #command-input { flex:1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        #run-command { padding: 10px 20px; background: #4CAF50; color: white; border:none; border-radius:5px; cursor:pointer; }
-        iframe { width:100%; height:80vh; border:none; border-radius:5px; }
-    </style>
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <h1>📱 سازنده ۲۵ اپ موبایل</h1>
-            <p>ایجاد اپ‌های کاربردی با دستورات فارسی</p>
+    <div id="app-container">
+        <!-- نوار بالایی -->
+        <header id="app-header">
+            <h1>اپ ساز حرفه‌ای</h1>
+            <nav id="app-nav">
+                <button data-page="home">خانه</button>
+                <button data-page="editor">ویرایشگر</button>
+                <button data-page="preview">پیش‌نمایش</button>
+                <button data-page="settings">تنظیمات</button>
+            </nav>
         </header>
 
-        <main>
-            <!-- loader -->
-            <div id="loader" class="loader">
-                <div class="spinner"></div>
-                <p>در حال بارگذاری...</p>
-            </div>
-
-            <!-- دستور ورودی -->
-            <div id="command-section" style="display:none;">
-                <input type="text" id="command-input" placeholder="دستور بدهید (مثال: باز کن یادداشت)">
-                <button id="run-command">▶ اجرا</button>
-            </div>
-
-            <!-- نتیجه/اپ -->
-            <div id="app-output"></div>
+        <!-- محتوا -->
+        <main id="app-main">
+            <!-- صفحات به صورت داینامیک بارگذاری می‌شوند -->
+            <div id="page-container"></div>
         </main>
+
+        <!-- پاورقی -->
+        <footer id="app-footer">
+            <p>© 2026 اپ ساز حرفه‌ای</p>
+        </footer>
     </div>
 
-    <!-- هسته اپ‌ها -->
-    <script src="app.library.js"></script>
-    <script src="calculator.js"></script>
+    <!-- اسکریپت‌ها -->
+    <script src="i18n.js"></script>
     <script src="core.js"></script>
+    <script src="app.library.js"></script>
+    <script src="engine.js"></script>
     <script src="main.js"></script>
+    <script src="ui.js"></script>
 </body>
 </html>
