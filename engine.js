@@ -1,13 +1,7 @@
 // engine.js - ADVANCED OUTPUT ENABLED
 
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-
-function sanitize(text) {
-  if (typeof text !== "string") return "";
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-}
+const vars = {}; // متغیرهای موقت
 
 function normalize(cmd) {
   return (cmd || "")
@@ -19,12 +13,9 @@ function normalize(cmd) {
     .trim();
 }
 
-// ورودی چند خطی، دستورات ترکیبی و پلاگین
 function runEngine(input) {
   let screen = "home";
   let output = [];
-  let pluginCommand = null;
-
   const lines = (input || "")
     .split("\n")
     .map(l => normalize(l))
@@ -40,31 +31,54 @@ function runEngine(input) {
     }
 
     // چاپ خروجی
-    if (cmd === "print") {
-      output.push(sanitize(parts.slice(1).join(" ")));
+    else if (cmd === "print") {
+      const msg = parts.slice(1).join(" ");
+      output.push(msg);
     }
 
     // پاک کردن خروجی
-    if (cmd === "clear") {
+    else if (cmd === "clear") {
       output = [];
     }
 
-    // فراخوانی پلاگین
-    if (cmd === "plugin" && parts[1]) {
-      pluginCommand = parts.slice(1).join(" ");
+    // هشدار alert
+    else if (cmd === "alert") {
+      const msg = parts.slice(1).join(" ");
+      output.push(`[ALERT] ${msg}`);
     }
 
-    // هشدار سریع
-    if (cmd === "alert") {
-      output.push(`⚠️ ${sanitize(parts.slice(1).join(" "))}`);
+    // تعریف متغیر
+    else if (cmd === "set" && parts[1] && parts[2]) {
+      const key = parts[1];
+      const value = parts.slice(2).join(" ");
+      vars[key] = value;
+      output.push(`[SET] ${key} = ${value}`);
+    }
+
+    // دریافت مقدار متغیر
+    else if (cmd === "get" && parts[1]) {
+      const key = parts[1];
+      const value = vars[key] || "";
+      output.push(`[GET] ${key} = ${value}`);
+    }
+
+    // فراخوانی پلاگین
+    else if (cmd === "plugin" && parts[1] && window.PluginSystem) {
+      const pluginName = parts[1];
+      const result = window.PluginSystem.execute(pluginName, ...parts.slice(2));
+      output.push(`[PLUGIN:${pluginName}] ${result}`);
+    }
+
+    else {
+      output.push(`[UNKNOWN CMD] ${line}`);
     }
   });
 
   return {
     screen,
-    output,
-    pluginCommand
+    output
   };
 }
 
+// اجازه دسترسی به موتور از main.js
 window.runEngine = runEngine;
