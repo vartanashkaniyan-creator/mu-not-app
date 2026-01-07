@@ -1,6 +1,6 @@
-// engine.js - مرحله ۳ (شرط، حلقه، متغیر، خروجی)
+// engine.js - ADVANCED OUTPUT ENABLED
+
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-const variables = {};
 
 function normalize(cmd) {
   return (cmd || "")
@@ -9,83 +9,41 @@ function normalize(cmd) {
     .replace(/یادداشت/g, "note")
     .replace(/لیست/g, "list")
     .replace(/برو/g, "go")
+    .replace(/نمایش/g, "print")
+    .replace(/پاک/g, "clear")
     .trim();
 }
 
 function runEngine(input) {
   let screen = "home";
   let output = [];
+
   const lines = (input || "")
     .split("\n")
     .map(l => normalize(l))
     .filter(Boolean);
 
   lines.forEach(line => {
-    // ===== متغیر =====
-    if (line.startsWith("set ")) {
-      const match = line.match(/^set\s+\$(\w+)\s*=\s*(.+)$/);
-      if (match) variables[match[1]] = evalExpression(match[2]);
-      return;
+    const parts = line.split(" ");
+    const cmd = parts[0];
+
+    // تغییر صفحه
+    if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
+      screen = parts[1];
     }
 
-    // ===== print =====
-    if (line.startsWith("print ")) {
-      const text = line.slice(6).replace(/\$(\w+)/g,(m,p)=>variables[p]||"");
-      output.push(text);
-      return;
+    // نمایش خروجی
+    if (cmd === "print") {
+      output.push(parts.slice(1).join(" "));
     }
 
-    // ===== screen =====
-    if (line.startsWith("screen ") || line.startsWith("go ")) {
-      const parts = line.split(" ");
-      if (parts[1] && ALLOWED_SCREENS.has(parts[1])) screen = parts[1];
-      return;
+    // پاک کردن خروجی
+    if (cmd === "clear") {
+      output = [];
     }
-
-    // ===== if / else =====
-    if (line.startsWith("if ")) {
-      const condMatch = line.match(/^if\s+(.+?);(.*)$/);
-      if (condMatch) {
-        const cond = condMatch[1];
-        const cmd = condMatch[2];
-        if (evalCondition(cond)) runEngine(cmd).output.forEach(o=>output.push(o));
-      }
-      return;
-    }
-
-    // ===== for =====
-    if (line.startsWith("for ")) {
-      const match = line.match(/^for\s+\$(\w+)\s*=\s*(\d+)\s+to\s+(\d+);(.*)$/);
-      if (match) {
-        const varName = match[1];
-        const from = parseInt(match[2]);
-        const to = parseInt(match[3]);
-        const cmd = match[4];
-        for(let i=from;i<=to;i++){
-          variables[varName]=i;
-          runEngine(cmd).output.forEach(o=>output.push(o));
-        }
-      }
-      return;
-    }
-
   });
 
   return { screen, output };
 }
 
-// ===== HELPER FUNCTIONS =====
-function evalExpression(expr){
-  try{
-    return eval(expr.replace(/\$(\w+)/g,(m,p)=>variables[p]||0));
-  }catch{return 0;}
-}
-
-function evalCondition(cond){
-  try{
-    return eval(cond.replace(/\$(\w+)/g,(m,p)=>variables[p]||0));
-  }catch{return false;}
-}
-
 window.runEngine = runEngine;
-window.variables = variables;
