@@ -1,39 +1,33 @@
-// main.js - ADVANCED APP BUILDER CORE
+// main.js - FINAL STABLE & UPGRADED
 
 let currentScreen = "home";
 let currentOutput = [];
-let history = [];
-const MAX_HISTORY = 50;
 
-// شروع برنامه
+// شروع اپ
 window.addEventListener("DOMContentLoaded", () => {
   renderScreen("home");
 });
 
 // اجرای دستور
 function runApp(command) {
-  if (command) history.push(command);
-  if (history.length > MAX_HISTORY) history.shift();
-
   const result = window.runEngine(command || "");
 
-  // تغییر صفحه
   if (result.screen) {
     currentScreen = result.screen;
     renderScreen(currentScreen);
   }
 
-  // نمایش خروجی
   if (Array.isArray(result.output)) {
     currentOutput = result.output;
     renderOutput();
   }
 }
 
-// رندر کردن صفحه
+// رندر صفحه
 function renderScreen(screen) {
   const app = document.getElementById("app");
   if (!app) return;
+
   app.innerHTML = "";
 
   // باکس خروجی
@@ -42,7 +36,7 @@ function renderScreen(screen) {
   outputBox.style.marginBottom = "20px";
   app.appendChild(outputBox);
 
-  // HOME
+  // صفحه home
   if (screen === "home") {
     const textarea = document.createElement("textarea");
     textarea.id = "commandInput";
@@ -55,7 +49,7 @@ function renderScreen(screen) {
     app.appendChild(btn);
   }
 
-  // NOTE
+  // صفحه note
   if (screen === "note") {
     const textarea = document.createElement("textarea");
     textarea.id = "noteText";
@@ -77,7 +71,7 @@ function renderScreen(screen) {
     app.appendChild(backBtn);
   }
 
-  // LIST
+  // صفحه list
   if (screen === "list") {
     const input = document.createElement("textarea");
     input.id = "itemInput";
@@ -119,8 +113,8 @@ function renderScreen(screen) {
 function renderOutput() {
   const box = document.getElementById("outputBox");
   if (!box) return;
-
   box.innerHTML = "";
+
   currentOutput.forEach(line => {
     const p = document.createElement("p");
     p.textContent = line;
