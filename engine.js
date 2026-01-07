@@ -1,8 +1,13 @@
-// engine.js — STEP 2 (Variables + Output + Commands)
+// engine.js - ADVANCED OUTPUT ENABLED
 
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
 
-const memory = {}; // حافظه متغیرها
+function sanitize(text) {
+  if (typeof text !== "string") return "";
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function normalize(cmd) {
   return (cmd || "")
@@ -14,17 +19,11 @@ function normalize(cmd) {
     .trim();
 }
 
-function resolveValue(value) {
-  // اگر مقدار اسم متغیر بود
-  if (memory[value] !== undefined) {
-    return memory[value];
-  }
-  return value;
-}
-
+// ورودی چند خطی، دستورات ترکیبی و پلاگین
 function runEngine(input) {
   let screen = "home";
   let output = [];
+  let pluginCommand = null;
 
   const lines = (input || "")
     .split("\n")
@@ -35,43 +34,36 @@ function runEngine(input) {
     const parts = line.split(" ");
     const cmd = parts[0];
 
-    // ===== SET VARIABLE =====
-    if (cmd === "set" && parts[2] === "=") {
-      const key = parts[1];
-      const value = parts.slice(3).join(" ");
-      memory[key] = value;
-      output.push(`✓ ${key} ذخیره شد`);
-      return;
+    // تغییر صفحه
+    if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
+      screen = parts[1];
     }
 
-    // ===== SCREEN / GO =====
-    if ((cmd === "screen" || cmd === "go")) {
-      const target = resolveValue(parts[1]);
-      if (ALLOWED_SCREENS.has(target)) {
-        screen = target;
-        output.push(`→ رفتی به صفحه ${target}`);
-      }
-      return;
-    }
-
-    // ===== PRINT =====
+    // چاپ خروجی
     if (cmd === "print") {
-      const text = parts.slice(1).map(resolveValue).join(" ");
-      output.push(text);
-      return;
+      output.push(sanitize(parts.slice(1).join(" ")));
     }
 
-    // ===== CLEAR =====
+    // پاک کردن خروجی
     if (cmd === "clear") {
       output = [];
-      return;
+    }
+
+    // فراخوانی پلاگین
+    if (cmd === "plugin" && parts[1]) {
+      pluginCommand = parts.slice(1).join(" ");
+    }
+
+    // هشدار سریع
+    if (cmd === "alert") {
+      output.push(`⚠️ ${sanitize(parts.slice(1).join(" "))}`);
     }
   });
 
   return {
     screen,
     output,
-    memory
+    pluginCommand
   };
 }
 
