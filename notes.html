@@ -1,1 +1,44 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>یادداشت‌ها</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>یادداشت‌ها</h1>
+            <button onclick="window.location='index.html'">🏠 بازگشت به خانه</button>
+        </header>
 
+        <main class="app-main">
+            <section class="notes-list">
+                <div id="notes-container"></div>
+            </section>
+
+            <section class="note-editor">
+                <input type="text" id="note-title" placeholder="عنوان یادداشت...">
+                <textarea id="note-content" placeholder="متن خود را اینجا بنویسید..." rows="10"></textarea>
+                <div class="editor-actions">
+                    <button id="save-note">💾 ذخیره</button>
+                    <button id="clear-note">🗑️ پاک کردن</button>
+                    <select id="note-category">
+                        <option value="شخصی">شخصی</option>
+                        <option value="کاری">کاری</option>
+                        <option value="ایده">ایده</option>
+                        <option value="خرید">خرید</option>
+                    </select>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>اپ ساز حرفه‌ای • نسخه 1.0.0</p>
+        </footer>
+    </div>
+
+    <script src="notes.js"></script>
+</body>
+</html>
