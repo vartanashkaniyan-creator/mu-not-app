@@ -1,9 +1,9 @@
-// main.js - FINAL STABLE & UPGRADED
+// main.js - ADVANCED OUTPUT & PLUGIN SUPPORT
 
 let currentScreen = "home";
 let currentOutput = [];
 
-// شروع اپ
+// شروع برنامه
 window.addEventListener("DOMContentLoaded", () => {
   renderScreen("home");
 });
@@ -12,14 +12,29 @@ window.addEventListener("DOMContentLoaded", () => {
 function runApp(command) {
   const result = window.runEngine(command || "");
 
+  // تغییر صفحه
   if (result.screen) {
     currentScreen = result.screen;
     renderScreen(currentScreen);
   }
 
+  // نمایش خروجی
   if (Array.isArray(result.output)) {
     currentOutput = result.output;
     renderOutput();
+  }
+
+  // نمایش alert
+  if (Array.isArray(result.alerts)) {
+    result.alerts.forEach(msg => setTimeout(() => alert(msg), 50));
+  }
+
+  // اجرای پلاگین
+  if (Array.isArray(result.pluginCommands) && window.PluginSystem) {
+    result.pluginCommands.forEach(pcmd => {
+      const res = window.PluginSystem.execute(pcmd);
+      setTimeout(() => alert(res), 100);
+    });
   }
 }
 
@@ -30,13 +45,11 @@ function renderScreen(screen) {
 
   app.innerHTML = "";
 
-  // باکس خروجی
   const outputBox = document.createElement("div");
   outputBox.id = "outputBox";
   outputBox.style.marginBottom = "20px";
   app.appendChild(outputBox);
 
-  // صفحه home
   if (screen === "home") {
     const textarea = document.createElement("textarea");
     textarea.id = "commandInput";
@@ -49,7 +62,6 @@ function renderScreen(screen) {
     app.appendChild(btn);
   }
 
-  // صفحه note
   if (screen === "note") {
     const textarea = document.createElement("textarea");
     textarea.id = "noteText";
@@ -71,7 +83,6 @@ function renderScreen(screen) {
     app.appendChild(backBtn);
   }
 
-  // صفحه list
   if (screen === "list") {
     const input = document.createElement("textarea");
     input.id = "itemInput";
@@ -114,7 +125,6 @@ function renderOutput() {
   const box = document.getElementById("outputBox");
   if (!box) return;
   box.innerHTML = "";
-
   currentOutput.forEach(line => {
     const p = document.createElement("p");
     p.textContent = line;
