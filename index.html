@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="welcome">خوش آمدید</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="app-container">
+        <!-- هدر -->
+        <header class="app-header">
+            <h1 data-i18n="welcome">خوش آمدید</h1>
+            <div class="search-box">
+                <input type="text" id="search-input" data-i18n="search" placeholder="جستجو...">
+                <button id="search-btn">🔍</button>
+            </div>
+            <div class="lang-switcher">
+                <button data-lang="fa">فارسی</button>
+                <button data-lang="en">EN</button>
+            </div>
+        </header>
 
+        <!-- بخش اصلی -->
+        <main class="app-main">
+            <aside class="sidebar">
+                <div class="categories">
+                    <h3 data-i18n="categories">دسته‌بندی‌ها</h3>
+                    <ul id="categories-list"></ul>
+                </div>
+                <div class="stats">
+                    <h3 data-i18n="stats">آمار</h3>
+                    <div id="app-stats"></div>
+                </div>
+            </aside>
+
+            <section class="content">
+                <div class="note-editor">
+                    <input type="text" id="note-title" data-i18n="title" placeholder="عنوان">
+                    <textarea id="note-content" data-i18n="content" placeholder="محتوا" rows="8"></textarea>
+                    <div class="editor-actions">
+                        <button id="save-note" data-i18n="save">💾 ذخیره</button>
+                        <button id="clear-note" data-i18n="delete">🗑️ حذف</button>
+                        <select id="note-category">
+                            <option value="شخصی" data-i18n="personal">شخصی</option>
+                            <option value="کاری" data-i18n="work">کاری</option>
+                            <option value="ایده" data-i18n="idea">ایده</option>
+                            <option value="خرید" data-i18n="shopping">خرید</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="notes-list">
+                    <h2 data-i18n="your_notes">یادداشت‌های شما</h2>
+                    <div id="notes-container"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- فوتر -->
+        <footer class="app-footer">
+            <p data-i18n="app_version">نسخه 1.0.0</p>
+        </footer>
+    </div>
+
+    <!-- اسکریپت‌ها -->
+    <script src="app.library.js"></script>
+    <script src="i18n.js"></script>
+    <script src="engine.js"></script>
+    <script src="storage.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+    <script>
+        // سوییچ زبان
+        document.querySelectorAll('.lang-switcher button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                window.I18n.setLanguage(lang);
+            });
+        });
+    </script>
+</body>
+</html>
