@@ -1,1 +1,30 @@
 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>یادداشت‌ها</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>یادداشت‌های من</h1>
+    </header>
+
+    <main>
+        <div id="loader">در حال بارگذاری...</div>
+
+        <div class="note-editor" style="display:none;">
+            <input type="text" id="note-title" placeholder="عنوان">
+            <textarea id="note-content" rows="8" placeholder="متن یادداشت..."></textarea>
+            <button id="save-note">💾 ذخیره</button>
+        </div>
+
+        <div class="notes-list" id="notes-container"></div>
+    </main>
+
+    <script src="storage.js"></script>
+    <script src="notes.js"></script>
+</body>
+</html>
