@@ -1,14 +1,9 @@
-// main.js - UPDATED FOR OUTPUT ENABLED ENGINE
-
+// main.js - PHASE 2
 let currentScreen = "home";
 let currentOutput = [];
 
-// ===== START APP =====
-window.addEventListener("DOMContentLoaded", () => {
-  renderScreen("home");
-});
+window.addEventListener("DOMContentLoaded", () => renderScreen("home"));
 
-// ===== RUN APP =====
 function runApp(command) {
   const result = window.runEngine(command || "");
 
@@ -23,23 +18,17 @@ function runApp(command) {
   }
 }
 
-// ===== RENDER SCREEN =====
 function renderScreen(screen) {
   const app = document.getElementById("app");
   if (!app) return;
-
   app.innerHTML = "";
 
-  // ===== OUTPUT BOX =====
+  // جعبه خروجی
   const outputBox = document.createElement("div");
   outputBox.id = "outputBox";
   outputBox.style.marginBottom = "20px";
-  outputBox.style.padding = "10px";
-  outputBox.style.background = "#1e1e1e";
-  outputBox.style.borderRadius = "8px";
   app.appendChild(outputBox);
 
-  // ===== HOME SCREEN =====
   if (screen === "home") {
     const textarea = document.createElement("textarea");
     textarea.id = "commandInput";
@@ -52,7 +41,6 @@ function renderScreen(screen) {
     app.appendChild(btn);
   }
 
-  // ===== NOTE SCREEN =====
   if (screen === "note") {
     const textarea = document.createElement("textarea");
     textarea.id = "noteText";
@@ -74,7 +62,6 @@ function renderScreen(screen) {
     app.appendChild(backBtn);
   }
 
-  // ===== LIST SCREEN =====
   if (screen === "list") {
     const input = document.createElement("textarea");
     input.id = "itemInput";
@@ -112,12 +99,11 @@ function renderScreen(screen) {
   renderOutput();
 }
 
-// ===== RENDER OUTPUT =====
 function renderOutput() {
   const box = document.getElementById("outputBox");
   if (!box) return;
-
   box.innerHTML = "";
+
   currentOutput.forEach(line => {
     const p = document.createElement("p");
     p.textContent = line;
@@ -125,4 +111,4 @@ function renderOutput() {
     p.style.borderBottom = "1px solid #333";
     box.appendChild(p);
   });
-    }
+}
