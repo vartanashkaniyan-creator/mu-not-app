@@ -1,103 +1,58 @@
+const UI = {
+  init() {
+    const saveBtn = document.getElementById('saveBtn');
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const list = document.getElementById('notesList');
 
-/* ==================================================
-   UI Controller
-   Mobile First | Simple | Extendable
-   ================================================== */
-
-const UI = (() => {
-
-    const appContainerId = 'app';
-
-    function getContainer() {
-        return document.getElementById(appContainerId);
+    if (!saveBtn) {
+      console.error('Save button not found');
+      return;
     }
 
-    /* ---------- Render ---------- */
-    function render(html) {
-        const container = getContainer();
-        if (!container) {
-            console.error('UI: app container not found');
-            return;
-        }
-        container.innerHTML = html;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    saveBtn.addEventListener('click', () => {
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
 
-    /* ---------- Loading ---------- */
-    function loading(text = 'در حال بارگذاری...') {
-        render(`
-            <div class="card center">
-                <div class="spinner"></div>
-                <p>${text}</p>
-            </div>
-        `);
-    }
+      if (!title && !content) {
+        alert('یادداشت خالی است');
+        return;
+      }
 
-    /* ---------- Error ---------- */
-    function error(message) {
-        render(`
-            <div class="card">
-                <h3>❌ خطا</h3>
-                <p>${message}</p>
-            </div>
-        `);
-    }
+      Storage.save({
+        title,
+        content,
+        date: new Date().toLocaleString('fa-IR')
+      });
 
-    /* ---------- Home ---------- */
-    function showHome() {
-        loading();
-        const apps = Engine.listApps();
-        render(Templates.home(apps));
-    }
+      titleInput.value = '';
+      contentInput.value = '';
 
-    /* ---------- Notes ---------- */
-    function showNotes() {
-        render(Templates.notes());
-        Engine.notes.render();
-    }
+      UI.render();
+    });
 
-    /* ---------- Calculator ---------- */
-    function showCalculator() {
-        render(Templates.calculator());
-    }
+    this.render();
+  },
 
-    /* ---------- Todo ---------- */
-    function showTodo() {
-        render(Templates.todo());
-        Engine.todo.render();
-    }
+  render() {
+    const list = document.getElementById('notesList');
+    if (!list) return;
 
-    /* ---------- Preview ---------- */
-    function showPreview(html) {
-        render(Templates.preview(html));
-    }
+    const notes = Storage.getAll();
+    list.innerHTML = '';
 
-    /* ---------- Notifications ---------- */
-    function notify(message, type = 'info') {
-        const notif = document.createElement('div');
-        notif.className = `notification ${type}`;
-        notif.innerText = message;
-        document.body.appendChild(notif);
+    notes.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note';
+      div.innerHTML = `
+        <h4>${note.title}</h4>
+        <p>${note.content}</p>
+        <small>${note.date}</small>
+        <hr/>
+      `;
+      list.appendChild(div);
+    });
+  }
+};
 
-        setTimeout(() => notif.remove(), 3000);
-    }
-
-    /* ---------- Public API ---------- */
-    return {
-        render,
-        loading,
-        error,
-        home: showHome,
-        notes: showNotes,
-        calculator: showCalculator,
-        todo: showTodo,
-        preview: showPreview,
-        notify
-    };
-
-})();
-
-/* ---------- Export ---------- */
 window.UI = UI;
-
-console.log('🎨 UI Controller Loaded');
