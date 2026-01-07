@@ -1,9 +1,7 @@
-// main.js - COMPATIBLE WITH OUTPUT-ENABLED ENGINE
+// main.js - UPDATED FOR OUTPUT ENABLED ENGINE
 
-// ===== STATE =====
 let currentScreen = "home";
 let currentOutput = [];
-let variables = {}; // برای دستور set/get
 
 // ===== START APP =====
 window.addEventListener("DOMContentLoaded", () => {
@@ -14,32 +12,11 @@ window.addEventListener("DOMContentLoaded", () => {
 function runApp(command) {
   const result = window.runEngine(command || "");
 
-  // مدیریت متغیرها
-  if (result.meta) {
-    if (result.meta.setVar) {
-      const { key, value } = result.meta.setVar;
-      variables[key] = value;
-    }
-    if (result.meta.getVar) {
-      const val = variables[result.meta.getVar];
-      if (val !== undefined) result.output.push(val);
-    }
-    if (result.meta.pluginCommand && window.PluginSystem) {
-      const pluginResult = window.PluginSystem.execute(result.meta.pluginCommand);
-      result.output.push(pluginResult);
-    }
-    if (result.meta.alertText) {
-      setTimeout(() => alert(result.meta.alertText), 50);
-    }
-  }
-
-  // تغییر صفحه
   if (result.screen) {
     currentScreen = result.screen;
     renderScreen(currentScreen);
   }
 
-  // خروجی
   if (Array.isArray(result.output)) {
     currentOutput = result.output;
     renderOutput();
@@ -57,9 +34,12 @@ function renderScreen(screen) {
   const outputBox = document.createElement("div");
   outputBox.id = "outputBox";
   outputBox.style.marginBottom = "20px";
+  outputBox.style.padding = "10px";
+  outputBox.style.background = "#1e1e1e";
+  outputBox.style.borderRadius = "8px";
   app.appendChild(outputBox);
 
-  // ===== HOME =====
+  // ===== HOME SCREEN =====
   if (screen === "home") {
     const textarea = document.createElement("textarea");
     textarea.id = "commandInput";
@@ -72,7 +52,7 @@ function renderScreen(screen) {
     app.appendChild(btn);
   }
 
-  // ===== NOTE =====
+  // ===== NOTE SCREEN =====
   if (screen === "note") {
     const textarea = document.createElement("textarea");
     textarea.id = "noteText";
@@ -94,7 +74,7 @@ function renderScreen(screen) {
     app.appendChild(backBtn);
   }
 
-  // ===== LIST =====
+  // ===== LIST SCREEN =====
   if (screen === "list") {
     const input = document.createElement("textarea");
     input.id = "itemInput";
@@ -136,8 +116,8 @@ function renderScreen(screen) {
 function renderOutput() {
   const box = document.getElementById("outputBox");
   if (!box) return;
-  box.innerHTML = "";
 
+  box.innerHTML = "";
   currentOutput.forEach(line => {
     const p = document.createElement("p");
     p.textContent = line;
@@ -145,14 +125,4 @@ function renderOutput() {
     p.style.borderBottom = "1px solid #333";
     box.appendChild(p);
   });
-}
-
-// ===== LANGUAGE CHANGE =====
-function handleLanguageChange(event) {
-  const val = event.target.value;
-  alert("زبان به " + val + " تغییر کرد!");
-}
-
-// ===== GLOBAL EXPORT =====
-window.runApp = runApp;
-window.handleLanguageChange = handleLanguageChange;
+    }
