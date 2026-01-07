@@ -1,6 +1,6 @@
-// engine.js - VARIABLES & OUTPUT ENABLED
+// engine.js - PHASE 2 (COMBINED COMMANDS + VARIABLES)
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-const VARIABLES = {}; // ذخیره متغیرها
+const VARIABLES = {};
 
 function normalize(cmd) {
   return (cmd || "")
@@ -16,50 +16,49 @@ function runEngine(input) {
   let screen = "home";
   let output = [];
 
-  const lines = (input || "")
-    .split("\n")
-    .map(l => normalize(l))
-    .filter(Boolean);
+  if (!input) return { screen, output };
 
-  lines.forEach(line => {
+  // تقسیم دستورات با ; برای اجرای ترکیبی
+  const commands = input.split(";").map(c => normalize(c)).filter(Boolean);
+
+  commands.forEach(line => {
     const parts = line.split(" ");
     const cmd = parts[0];
 
-    // ===== SCREENS =====
+    // ===== متغیرها =====
+    if (cmd === "set" && parts[1] && parts[2] === "=") {
+      const varName = parts[1];
+      const varValue = parts.slice(3).join(" ");
+      VARIABLES[varName] = varValue;
+    }
+
+    // جایگذاری متغیرها در دستورات
+    let processedLine = line.replace(/\$(\w+)/g, (_, v) => VARIABLES[v] || "");
+
+    // ===== دستورات صفحه =====
     if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
       screen = parts[1];
     }
 
-    // ===== VARIABLES =====
-    if (cmd === "set" && parts[1] && parts[2] !== undefined) {
-      VARIABLES[parts[1]] = parts.slice(2).join(" ");
-    }
-
+    // ===== چاپ خروجی =====
     if (cmd === "print") {
-      const varName = parts[1];
-      if (varName && VARIABLES[varName] !== undefined) {
-        output.push(VARIABLES[varName]);
-      } else {
-        output.push(parts.slice(1).join(" "));
-      }
+      output.push(processedLine.replace(/^print\s*/, ""));
     }
 
-    // ===== ALERT =====
-    if (cmd === "alert") {
-      output.push("⚠️ " + parts.slice(1).join(" "));
-    }
-
-    // ===== CLEAR OUTPUT =====
+    // ===== پاک کردن خروجی =====
     if (cmd === "clear") {
       output = [];
     }
+
+    // ===== پلاگین =====
+    if (cmd === "plugin" && parts[1] && window.PluginSystem) {
+      const result = window.PluginSystem.execute(parts[1]);
+      output.push(result);
+    }
   });
 
-  return {
-    screen,
-    output,
-    variables: { ...VARIABLES } // کپی برای بررسی در main.js
-  };
+  return { screen, output };
 }
 
 window.runEngine = runEngine;
+window.VARIABLES = VARIABLES;
