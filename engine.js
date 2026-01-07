@@ -1,10 +1,7 @@
-// engine.js - ADVANCED OUTPUT ENABLED
-
-// ===== متغیرهای ذخیره داخلی =====
+// engine.js - VARIABLES & OUTPUT ENABLED
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
-const VARIABLES = new Map(); // ذخیره متغیرها
+const VARIABLES = {}; // ذخیره متغیرها
 
-// ===== نرمال‌سازی دستورات =====
 function normalize(cmd) {
   return (cmd || "")
     .toLowerCase()
@@ -12,11 +9,9 @@ function normalize(cmd) {
     .replace(/یادداشت/g, "note")
     .replace(/لیست/g, "list")
     .replace(/برو/g, "go")
-    .replace(/نمایش/g, "print")
     .trim();
 }
 
-// ===== موتور اصلی =====
 function runEngine(input) {
   let screen = "home";
   let output = [];
@@ -30,46 +25,41 @@ function runEngine(input) {
     const parts = line.split(" ");
     const cmd = parts[0];
 
-    // تغییر صفحه
+    // ===== SCREENS =====
     if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
       screen = parts[1];
     }
 
-    // چاپ متن
-    if (cmd === "print") {
-      output.push(parts.slice(1).join(" "));
+    // ===== VARIABLES =====
+    if (cmd === "set" && parts[1] && parts[2] !== undefined) {
+      VARIABLES[parts[1]] = parts.slice(2).join(" ");
     }
 
-    // پاکسازی خروجی
+    if (cmd === "print") {
+      const varName = parts[1];
+      if (varName && VARIABLES[varName] !== undefined) {
+        output.push(VARIABLES[varName]);
+      } else {
+        output.push(parts.slice(1).join(" "));
+      }
+    }
+
+    // ===== ALERT =====
+    if (cmd === "alert") {
+      output.push("⚠️ " + parts.slice(1).join(" "));
+    }
+
+    // ===== CLEAR OUTPUT =====
     if (cmd === "clear") {
       output = [];
     }
-
-    // ذخیره متغیر
-    if (cmd === "set" && parts[1]) {
-      const key = parts[1];
-      const value = parts.slice(2).join(" ") || "";
-      VARIABLES.set(key, value);
-      output.push(`✅ متغیر ${key} ذخیره شد`);
-    }
-
-    // بازیابی متغیر
-    if (cmd === "get" && parts[1]) {
-      const key = parts[1];
-      const val = VARIABLES.has(key) ? VARIABLES.get(key) : "<ناموجود>";
-      output.push(`${key} = ${val}`);
-    }
-
-    // اجرای پلاگین
-    if (cmd === "plugin" && parts[1] && window.PluginSystem) {
-      const pluginName = parts[1];
-      const result = window.PluginSystem.execute(pluginName, ...parts.slice(2));
-      output.push(`🔌 [${pluginName}]: ${result}`);
-    }
   });
 
-  return { screen, output };
+  return {
+    screen,
+    output,
+    variables: { ...VARIABLES } // کپی برای بررسی در main.js
+  };
 }
 
-// ===== اکسپورت به ویندوز =====
 window.runEngine = runEngine;
