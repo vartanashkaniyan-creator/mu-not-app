@@ -1,5 +1,4 @@
-// engine.js - ADVANCED OUTPUT ENABLED
-
+// engine.js - OUTPUT ENABLED & ADVANCED
 const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
 
 function normalize(cmd) {
@@ -9,8 +8,6 @@ function normalize(cmd) {
     .replace(/یادداشت/g, "note")
     .replace(/لیست/g, "list")
     .replace(/برو/g, "go")
-    .replace(/نمایش/g, "print")
-    .replace(/پاک/g, "clear")
     .trim();
 }
 
@@ -32,7 +29,7 @@ function runEngine(input) {
       screen = parts[1];
     }
 
-    // نمایش خروجی
+    // چاپ متن
     if (cmd === "print") {
       output.push(parts.slice(1).join(" "));
     }
@@ -40,6 +37,11 @@ function runEngine(input) {
     // پاک کردن خروجی
     if (cmd === "clear") {
       output = [];
+    }
+
+    // دستور alert (نمایش هشدار)
+    if (cmd === "alert") {
+      output.push("⚠️ ALERT: " + parts.slice(1).join(" "));
     }
   });
 
