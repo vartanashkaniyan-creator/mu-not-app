@@ -1,127 +1,70 @@
-// main.js — STEP 2
-// Compatible with engine.js (variables + output)
+// engine.js - ADVANCED OUTPUT ENABLED
 
-// ===== STATE =====
-let currentScreen = "home";
-let currentOutput = [];
+const ALLOWED_SCREENS = new Set(["home", "note", "list"]);
 
-// ===== START =====
-window.addEventListener("DOMContentLoaded", () => {
-  renderScreen("home");
-});
-
-// ===== RUN APP =====
-function runApp(command) {
-  const result = window.runEngine(command || "");
-
-  if (result.screen) {
-    currentScreen = result.screen;
-    renderScreen(currentScreen);
-  }
-
-  if (Array.isArray(result.output)) {
-    currentOutput = result.output;
-    renderOutput();
-  }
+function sanitize(text) {
+  if (typeof text !== "string") return "";
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
 
-// ===== RENDER SCREEN =====
-function renderScreen(screen) {
-  const app = document.getElementById("app");
-  if (!app) return;
-
-  app.innerHTML = "";
-
-  // ===== OUTPUT =====
-  const outputBox = document.createElement("div");
-  outputBox.id = "outputBox";
-  outputBox.style.marginBottom = "16px";
-  app.appendChild(outputBox);
-
-  // ===== HOME =====
-  if (screen === "home") {
-    const textarea = document.createElement("textarea");
-    textarea.id = "commandInput";
-    textarea.placeholder = "دستور بنویس…";
-    app.appendChild(textarea);
-
-    const btn = document.createElement("button");
-    btn.textContent = "اجرا";
-    btn.onclick = () => runApp(textarea.value);
-    app.appendChild(btn);
-  }
-
-  // ===== NOTE =====
-  if (screen === "note") {
-    const textarea = document.createElement("textarea");
-    textarea.value = localStorage.getItem("note") || "";
-    app.appendChild(textarea);
-
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "ذخیره";
-    saveBtn.onclick = () => {
-      localStorage.setItem("note", textarea.value);
-      alert("ذخیره شد ✅");
-    };
-    app.appendChild(saveBtn);
-
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "بازگشت";
-    backBtn.onclick = () => runApp("screen home");
-    app.appendChild(backBtn);
-  }
-
-  // ===== LIST =====
-  if (screen === "list") {
-    const input = document.createElement("textarea");
-    input.placeholder = "آیتم جدید…";
-    app.appendChild(input);
-
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "اضافه";
-    addBtn.onclick = () => {
-      const val = input.value.trim();
-      if (!val) return;
-
-      const list = JSON.parse(localStorage.getItem("items") || "[]");
-      list.push(val);
-      localStorage.setItem("items", JSON.stringify(list));
-
-      renderScreen("list");
-      renderOutput();
-    };
-    app.appendChild(addBtn);
-
-    const ul = document.createElement("ul");
-    const items = JSON.parse(localStorage.getItem("items") || "[]");
-    items.forEach((item, i) => {
-      const li = document.createElement("li");
-      li.textContent = `${i + 1}. ${item}`;
-      ul.appendChild(li);
-    });
-    app.appendChild(ul);
-
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "بازگشت";
-    backBtn.onclick = () => runApp("screen home");
-    app.appendChild(backBtn);
-  }
-
-  renderOutput();
+function normalize(cmd) {
+  return (cmd || "")
+    .toLowerCase()
+    .replace(/صفحه/g, "screen")
+    .replace(/یادداشت/g, "note")
+    .replace(/لیست/g, "list")
+    .replace(/برو/g, "go")
+    .trim();
 }
 
-// ===== RENDER OUTPUT =====
-function renderOutput() {
-  const box = document.getElementById("outputBox");
-  if (!box) return;
+// ورودی چند خطی، دستورات ترکیبی و پلاگین
+function runEngine(input) {
+  let screen = "home";
+  let output = [];
+  let pluginCommand = null;
 
-  box.innerHTML = "";
+  const lines = (input || "")
+    .split("\n")
+    .map(l => normalize(l))
+    .filter(Boolean);
 
-  currentOutput.forEach(line => {
-    const p = document.createElement("p");
-    p.textContent = line;
-    p.style.padding = "4px 0";
-    p.style.borderBottom = "1px solid #333";
-    box.appendChild(p);
+  lines.forEach(line => {
+    const parts = line.split(" ");
+    const cmd = parts[0];
+
+    // تغییر صفحه
+    if ((cmd === "screen" || cmd === "go") && ALLOWED_SCREENS.has(parts[1])) {
+      screen = parts[1];
+    }
+
+    // چاپ خروجی
+    if (cmd === "print") {
+      output.push(sanitize(parts.slice(1).join(" ")));
+    }
+
+    // پاک کردن خروجی
+    if (cmd === "clear") {
+      output = [];
+    }
+
+    // فراخوانی پلاگین
+    if (cmd === "plugin" && parts[1]) {
+      pluginCommand = parts.slice(1).join(" ");
+    }
+
+    // هشدار سریع
+    if (cmd === "alert") {
+      output.push(`⚠️ ${sanitize(parts.slice(1).join(" "))}`);
+    }
   });
+
+  return {
+    screen,
+    output,
+    pluginCommand
+  };
 }
+
+window.runEngine = runEngine;
