@@ -1,4 +1,4 @@
-// UI.js – رابط کاربری پیشرفته و ماژولار
+// UI.js – رابط کاربری اصلاح‌شده
 const UI = {
     container: null,
     init(containerId = 'app') {
@@ -8,10 +8,7 @@ const UI = {
             return;
         }
 
-        // رویدادهای عمومی
         this.bindGlobalEvents();
-
-        // رندر اولیه صفحه خانه
         this.load('home');
     },
 
@@ -37,7 +34,7 @@ const UI = {
             case 'notes':
                 this.container.innerHTML = window.Templates.notes();
                 this.bindNotesEvents();
-                UI.renderNotes();
+                this.renderNotes();
                 break;
             case 'calculator':
                 this.container.innerHTML = window.Templates.calculator();
@@ -46,6 +43,7 @@ const UI = {
             case 'todo':
                 this.container.innerHTML = window.Templates.todo();
                 this.bindTodoEvents();
+                this.renderTodo();
                 break;
             case 'preview':
                 this.container.innerHTML = window.Templates.preview(data.html || '');
@@ -55,7 +53,6 @@ const UI = {
         }
     },
 
-    /* ---------- Notes App ---------- */
     bindNotesEvents() {
         const saveBtn = document.getElementById('save-note');
         const clearBtn = document.getElementById('clear-note');
@@ -63,7 +60,7 @@ const UI = {
         const contentInput = document.getElementById('note-content');
         const categorySelect = document.getElementById('note-category');
 
-        if (!saveBtn) return;
+        if (!saveBtn || !clearBtn) return;
 
         saveBtn.onclick = () => {
             const note = {
@@ -121,7 +118,7 @@ const UI = {
 
             div.querySelector('.delete-btn').onclick = () => {
                 if (!confirm('آیا مطمئن هستید؟')) return;
-                window.Storage.delete(note.id);
+                window.Storage.remove(note.id); // اصلاح‌شده
                 this.renderNotes();
             };
 
@@ -129,28 +126,32 @@ const UI = {
         });
     },
 
-    /* ---------- Calculator App ---------- */
     bindCalculatorEvents() {
         const input = document.getElementById('calc-input');
         const resultDiv = document.getElementById('calc-result');
+        const runBtn = document.getElementById('calc-run');
 
-        document.querySelector('button[onclick*="Engine.calculator.run"]').onclick = () => {
+        if (!runBtn) return;
+
+        runBtn.onclick = () => {
             const val = input.value.trim();
             if (!val) return;
-            const res = window.Engine.calculator.calculate(val);
+            const res = window.Engine.calc(val);
             resultDiv.textContent = res;
         };
     },
 
-    /* ---------- Todo App ---------- */
     bindTodoEvents() {
         const input = document.getElementById('todo-input');
         const list = document.getElementById('todo-list');
+        const addBtn = document.getElementById('todo-add');
 
-        document.querySelector('button[onclick*="Engine.todo.add"]').onclick = () => {
+        if (!addBtn) return;
+
+        addBtn.onclick = () => {
             const val = input.value.trim();
             if (!val) return;
-            window.Engine.todo.add(val);
+            window.Engine.todoAdd(val);
             this.renderTodo();
             input.value = '';
         };
@@ -161,16 +162,15 @@ const UI = {
         if (!list) return;
 
         list.innerHTML = '';
-        const todos = window.Engine.todo.getAll() || [];
+        const todos = window.Engine.todo || [];
         todos.forEach(todo => {
             const li = document.createElement('div');
             li.className = 'list-item';
-            li.textContent = todo;
+            li.textContent = todo.task;
             list.appendChild(li);
         });
     }
 };
 
-// ثبت در سطح جهانی
 window.UI = UI;
-console.log('✅ UI.js پیشرفته آماده شد');
+console.log('✅ UI.js اصلاح‌شده بارگذاری شد');
