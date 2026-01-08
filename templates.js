@@ -1,6 +1,5 @@
 /**
- * 🧩 Templates.js – موتور قالب اپلیکیشن
- * نسخه 3.1.0
+ * 🧩 Templates.js – قالب‌های هماهنگ با UI و Router
  */
 
 const Templates = (() => {
@@ -10,6 +9,19 @@ const Templates = (() => {
         <div class="card">
             <h2 class="center">${title}</h2>
             <div class="card-body">${body}</div>
+        </div>
+        `;
+    }
+
+    function homeTemplate(apps = []) {
+        return `
+        <div class="app-grid">
+            ${apps.map(app => `
+                <div class="app-tile" data-route="${app.id}">
+                    <span>${app.icon || '📱'}</span>
+                    <p>${app.name}</p>
+                </div>
+            `).join('')}
         </div>
         `;
     }
@@ -57,40 +69,15 @@ const Templates = (() => {
         });
     }
 
-    function homeTemplate(apps = []) {
-        return `
-        <div class="app-grid">
-            ${apps.map(app => `
-                <div class="app-tile" data-route="${app.id}">
-                    <span>${app.icon || '📱'}</span>
-                    <p>${app.name}</p>
-                </div>
-            `).join('')}
-        </div>
-        `;
-    }
-
-    function previewTemplate(html = '') {
-        return `
-        <div class="card">
-            <h2 class="center">🔍 پیش‌نمایش</h2>
-            <iframe style="width:100%;height:60vh;border:none;border-radius:12px"
-                srcdoc="${html.replace(/"/g, '&quot;')}">
-            </iframe>
-        </div>
-        `;
-    }
-
     return {
         base: baseTemplate,
         home: homeTemplate,
         notes: notesTemplate,
         calculator: calculatorTemplate,
-        todo: todoTemplate,
-        preview: previewTemplate
+        todo: todoTemplate
     };
 
 })();
 
 window.Templates = Templates;
-console.log('🧩 Templates.js بارگذاری شد');
+console.log('✅ Templates.js آماده شد');
