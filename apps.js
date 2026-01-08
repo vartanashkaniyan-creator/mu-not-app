@@ -1,3 +1,4 @@
+console.log('APP STARTED');
 // app.js - کلاس اصلی اپلیکیشن
 export class AppBuilder {
     constructor(config = {}) {
