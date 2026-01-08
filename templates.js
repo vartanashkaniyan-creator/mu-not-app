@@ -1,12 +1,10 @@
 /**
  * 🧩 Templates.js – موتور قالب اپلیکیشن
- * نسخه 3.0.0
- * Mobile-first | Extendable | UI-ready
+ * نسخه 3.1.0 – اصلاح‌شده
  */
 
 const Templates = (() => {
 
-    /* ---------- قالب پایه ---------- */
     function baseTemplate({ title = '', body = '', scripts = '' }) {
         return `
         <div class="card">
@@ -17,7 +15,6 @@ const Templates = (() => {
         `;
     }
 
-    /* ---------- صفحه یادداشت‌ها ---------- */
     function notesTemplate() {
         return baseTemplate({
             title: '📝 یادداشت‌ها',
@@ -31,44 +28,41 @@ const Templates = (() => {
                     <option value="خرید">خرید</option>
                 </select>
                 <div class="editor-actions">
-                    <button class="btn-primary" onclick="Engine.notes.save()">💾 ذخیره</button>
-                    <button class="btn-danger" onclick="Engine.notes.clearEditor()">🗑️ پاک کردن</button>
+                    <button id="save-note" class="btn-primary">💾 ذخیره</button>
+                    <button id="clear-note" class="btn-danger">🗑️ پاک کردن</button>
                 </div>
                 <div class="list" id="notes-list"></div>
             `
         });
     }
 
-    /* ---------- ماشین حساب ---------- */
     function calculatorTemplate() {
         return baseTemplate({
             title: '🧮 ماشین حساب',
             body: `
                 <input id="calc-input" placeholder="مثال: 2+3×4">
-                <button class="btn-primary" onclick="Engine.calculator.run()">محاسبه</button>
+                <button class="btn-primary" id="calc-run">محاسبه</button>
                 <div class="card center" id="calc-result">---</div>
             `
         });
     }
 
-    /* ---------- لیست کارها ---------- */
     function todoTemplate() {
         return baseTemplate({
             title: '✅ لیست کارها',
             body: `
                 <input id="todo-input" placeholder="کار جدید...">
-                <button class="btn-primary" onclick="Engine.todo.add()">افزودن</button>
+                <button class="btn-primary" id="todo-add">افزودن</button>
                 <div class="list" id="todo-list"></div>
             `
         });
     }
 
-    /* ---------- صفحه اصلی ---------- */
     function homeTemplate(apps = []) {
         return `
         <div class="app-grid">
             ${apps.map(app => `
-                <div class="app-tile" onclick="Router.navigate('${app.id}')">
+                <div class="app-tile" data-route="${app.id}">
                     <span>${app.icon || '📱'}</span>
                     <p>${app.name}</p>
                 </div>
@@ -77,7 +71,6 @@ const Templates = (() => {
         `;
     }
 
-    /* ---------- پیش‌نمایش HTML ---------- */
     function previewTemplate(html = '') {
         return `
         <div class="card">
@@ -89,7 +82,6 @@ const Templates = (() => {
         `;
     }
 
-    /* ---------- API عمومی ---------- */
     return {
         base: baseTemplate,
         home: homeTemplate,
@@ -101,7 +93,5 @@ const Templates = (() => {
 
 })();
 
-// ثبت در سطح جهانی
 window.Templates = Templates;
-
-console.log('🧩 Templates.js بارگذاری شد و آماده استفاده');
+console.log('🧩 Templates.js اصلاح‌شده بارگذاری شد');
