@@ -1,1 +1,785 @@
 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>یادداشت‌ها - AppBuilder</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Notes App Specific Styles */
+        .notes-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .notes-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .notes-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .notes-search {
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+        
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .note-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .note-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .note-item.selected {
+            background: #e8f5e9;
+            border-right: 4px solid var(--primary-color);
+        }
+        
+        .note-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .note-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .note-preview {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .note-date {
+            direction: ltr;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            margin-right: 10px;
+        }
+        
+        .note-action-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .note-action-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .notes-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #888;
+        }
+        
+        .notes-empty i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .notes-editor {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notes-editor.active {
+            transform: translateX(0);
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .editor-title-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .editor-title-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .editor-title-input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .editor-content {
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .editor-textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-size: 16px;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        
+        .editor-textarea:focus {
+            outline: none;
+        }
+        
+        .editor-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .char-count {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .notes-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .category-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        
+        .category-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .notes-fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .notes-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .notes-container {
+                padding: 15px;
+            }
+            
+            .notes-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .notes-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .notes-fab {
+                bottom: 20px;
+                left: 20px;
+            }
+        }
+        
+        /* Dark Theme Support */
+        .dark-theme .notes-list {
+            background: #2d2d2d;
+        }
+        
+        .dark-theme .note-item {
+            border-bottom-color: #444;
+        }
+        
+        .dark-theme .note-item:hover {
+            background: #383838;
+        }
+        
+        .dark-theme .note-item.selected {
+            background: #1b5e20;
+        }
+        
+        .dark-theme .note-title {
+            color: #fff;
+        }
+        
+        .dark-theme .note-preview {
+            color: #aaa;
+        }
+        
+        .dark-theme .search-input {
+            background: #333;
+            border-color: #444;
+            color: white;
+        }
+        
+        .dark-theme .notes-editor {
+            background: #1e1e1e;
+        }
+        
+        .dark-theme .editor-textarea {
+            background: #1e1e1e;
+            color: white;
+        }
+        
+        .dark-theme .editor-footer {
+            border-top-color: #444;
+        }
+        
+        .dark-theme .category-btn {
+            background: #333;
+            border-color: #444;
+            color: #aaa;
+        }
+        
+        .dark-theme .category-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body class="app-page">
+    <div class="notes-container">
+        <!-- Header -->
+        <div class="notes-header">
+            <h1 class="notes-title">
+                <i class="fas fa-sticky-note"></i>
+                یادداشت‌ها
+            </h1>
+            
+            <div class="notes-actions">
+                <button class="btn btn-outline" onclick="toggleViewMode()">
+                    <i class="fas fa-th"></i>
+                    تغییر نمایش
+                </button>
+                <button class="btn btn-outline" onclick="exportNotes()">
+                    <i class="fas fa-download"></i>
+                    خروجی
+                </button>
+                <button class="btn btn-primary" onclick="createNewNote()">
+                    <i class="fas fa-plus"></i>
+                    یادداشت جدید
+                </button>
+            </div>
+        </div>
+        
+        <!-- Categories -->
+        <div class="notes-categories">
+            <button class="category-btn active" onclick="filterNotes('all')">همه</button>
+            <button class="category-btn" onclick="filterNotes('work')">کار</button>
+            <button class="category-btn" onclick="filterNotes('personal')">شخصی</button>
+            <button class="category-btn" onclick="filterNotes('ideas')">ایده‌ها</button>
+            <button class="category-btn" onclick="filterNotes('todo')">کارها</button>
+            <button class="category-btn" onclick="filterNotes('archive')">آرشیو</button>
+        </div>
+        
+        <!-- Search -->
+        <div class="notes-search">
+            <input type="text" 
+                   class="search-input" 
+                   placeholder="جستجوی یادداشت‌ها..."
+                   oninput="searchNotes(this.value)">
+        </div>
+        
+        <!-- Notes List -->
+        <div class="notes-list" id="notesList">
+            <!-- Notes will be loaded here dynamically -->
+            <div class="notes-empty" id="emptyState">
+                <i class="fas fa-sticky-note"></i>
+                <h3>یادداشتی یافت نشد</h3>
+                <p>اولین یادداشت خود را ایجاد کنید</p>
+                <button class="btn btn-primary" onclick="createNewNote()" style="margin-top: 15px;">
+                    ساخت یادداشت جدید
+                </button>
+            </div>
+        </div>
+        
+        <!-- Floating Action Button -->
+        <button class="notes-fab" onclick="createNewNote()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    
+    <!-- Note Editor (Hidden) -->
+    <div class="notes-editor" id="noteEditor">
+        <div class="editor-header">
+            <input type="text" 
+                   class="editor-title-input" 
+                   id="noteTitle"
+                   placeholder="عنوان یادداشت..."
+                   maxlength="100">
+            
+            <div class="editor-actions">
+                <button class="btn btn-outline" onclick="saveNote()" style="color: white; border-color: white;">
+                    <i class="fas fa-save"></i>
+                    ذخیره
+                </button>
+                <button class="btn btn-outline" onclick="closeEditor()" style="color: white; border-color: white;">
+                    <i class="fas fa-times"></i>
+                    بستن
+                </button>
+            </div>
+        </div>
+        
+        <div class="editor-content">
+            <textarea class="editor-textarea" 
+                      id="noteContent"
+                      placeholder="متن یادداشت خود را بنویسید..."
+                      rows="15"></textarea>
+        </div>
+        
+        <div class="editor-footer">
+            <div class="char-count">
+                <span id="charCount">0</span> کاراکتر
+            </div>
+            
+            <div>
+                <button class="btn btn-outline" onclick="deleteNote()" style="margin-left: 10px;">
+                    <i class="fas fa-trash"></i>
+                    حذف
+                </button>
+                <button class="btn btn-outline" onclick="shareNote()">
+                    <i class="fas fa-share"></i>
+                    اشتراک
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Notes App JavaScript
+        let notes = [];
+        let currentNoteId = null;
+        let currentFilter = 'all';
+        let viewMode = 'list'; // 'list' or 'grid'
+        
+        // Load notes from storage
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('appbuilder_notes');
+            if (savedNotes) {
+                notes = JSON.parse(savedNotes);
+            }
+            renderNotes();
+        }
+        
+        // Render notes list
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Filter notes
+            let filteredNotes = notes;
+            if (currentFilter !== 'all') {
+                filteredNotes = notes.filter(note => note.category === currentFilter);
+            }
+            
+            if (filteredNotes.length === 0) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                container.appendChild(emptyState);
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Generate HTML
+            const html = filteredNotes.map(note => `
+                <div class="note-item ${currentNoteId === note.id ? 'selected' : ''}" 
+                     onclick="openNote('${note.id}')">
+                    <div class="note-content">
+                        <div class="note-title">${escapeHtml(note.title || 'بدون عنوان')}</div>
+                        <div class="note-preview">${escapeHtml(note.content.substring(0, 150))}...</div>
+                        <div class="note-meta">
+                            <span class="note-category">${getCategoryLabel(note.category)}</span>
+                            <span class="note-date">${formatDate(note.updated)}</span>
+                        </div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="note-action-btn" onclick="event.stopPropagation(); pinNote('${note.id}')" 
+                                title="${note.pinned ? 'لغو سنجاق' : 'سنجاق کردن'}">
+                            <i class="fas fa-thumbtack ${note.pinned ? 'text-primary' : ''}"></i>
+                        </button>
+                        <button class="note-action-btn" onclick="event.stopPropagation(); deleteNote('${note.id}')" 
+                                title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // Create new note
+        function createNewNote() {
+            currentNoteId = Date.now().toString();
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('noteEditor').classList.add('active');
+            updateCharCount();
+        }
+        
+        // Open existing note
+        function openNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            
+            currentNoteId = id;
+            document.getElementById('noteTitle').value = note.title || '';
+            document.getElementById('noteContent').value = note.content || '';
+            document.getElementById('charCount').textContent = note.content.length;
+            document.getElementById('noteEditor').classList.add('active');
+            
+            // Update list selection
+            renderNotes();
+        }
+        
+        // Save note
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value;
+            
+            if (!title && !content) {
+                alert('لطفاً عنوان یا محتوایی وارد کنید');
+                return;
+            }
+            
+            const noteIndex = notes.findIndex(n => n.id === currentNoteId);
+            
+            if (noteIndex > -1) {
+                // Update existing note
+                notes[noteIndex] = {
+                    ...notes[noteIndex],
+                    title,
+                    content,
+                    updated: new Date().toISOString()
+                };
+            } else {
+                // Create new note
+                notes.unshift({
+                    id: currentNoteId,
+                    title,
+                    content,
+                    category: currentFilter === 'all' ? 'personal' : currentFilter,
+                    created: new Date().toISOString(),
+                    updated: new Date().toISOString(),
+                    pinned: false
+                });
+            }
+            
+            // Save to storage
+            localStorage.setItem('appbuilder_notes', JSON.stringify(notes));
+            
+            // Close editor and refresh list
+            closeEditor();
+            renderNotes();
+            
+            // Show success message
+            showToast('یادداشت ذخیره شد', 'success');
+        }
+        
+        // Delete note
+        function deleteNote(id = null) {
+            const noteId = id || currentNoteId;
+            if (!noteId) return;
+            
+            if (!confirm('آیا از حذف این یادداشت اطمینان دارید؟')) return;
+            
+            notes = notes.filter(n => n.id !== noteId);
+            localStorage.setItem('appbuilder_notes', JSON.stringify(notes));
+            
+            if (!id) {
+                closeEditor();
+            }
+            
+            renderNotes();
+            showToast('یادداشت حذف شد', 'info');
+        }
+        
+        // Pin/Unpin note
+        function pinNote(id) {
+            const noteIndex = notes.findIndex(n => n.id === id);
+            if (noteIndex === -1) return;
+            
+            notes[noteIndex].pinned = !notes[noteIndex].pinned;
+            localStorage.setItem('appbuilder_notes', JSON.stringify(notes));
+            renderNotes();
+        }
+        
+        // Filter notes by category
+        function filterNotes(category) {
+            currentFilter = category;
+            
+            // Update active category button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderNotes();
+        }
+        
+        // Search notes
+        function searchNotes(query) {
+            // Implement search functionality
+            console.log('Searching for:', query);
+            // Actual search implementation would go here
+        }
+        
+        // Toggle view mode
+        function toggleViewMode() {
+            viewMode = viewMode === 'list' ? 'grid' : 'list';
+            document.querySelector('.notes-list').classList.toggle('grid-view');
+            
+            // Update button icon
+            const icon = event.target.querySelector('i') || event.target;
+            icon.className = viewMode === 'list' ? 'fas fa-th' : 'fas fa-list';
+            
+            // Re-render notes
+            renderNotes();
+        }
+        
+        // Export notes
+        function exportNotes() {
+            const dataStr = JSON.stringify(notes, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `notes_${new Date().getTime()}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showToast('یادداشت‌ها با موفقیت صادر شدند', 'success');
+        }
+        
+        // Share note
+        function shareNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title || 'یادداشت',
+                    text: content.substring(0, 100) + '...',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                const text = `${title}\n\n${content}`;
+                navigator.clipboard.writeText(text);
+                showToast('متن در کلیپ‌بورد کپی شد', 'info');
+            }
+        }
+        
+        // Close editor
+        function closeEditor() {
+            document.getElementById('noteEditor').classList.remove('active');
+            currentNoteId = null;
+        }
+        
+        // Update character count
+        function updateCharCount() {
+            const content = document.getElementById('noteContent').value;
+            document.getElementById('charCount').textContent = content.length;
+        }
+        
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            
+            // Less than a day
+            if (diff < 86400000) {
+                return date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // Less than a week
+            if (diff < 604800000) {
+                return date.toLocaleDateString('fa-IR', { weekday: 'short' });
+            }
+            
+            // Otherwise
+            return date.toLocaleDateString('fa-IR');
+        }
+        
+        function getCategoryLabel(category) {
+            const labels = {
+                'work': 'کار',
+                'personal': 'شخصی',
+                'ideas': 'ایده‌ها',
+                'todo': 'کارها',
+                'archive': 'آرشیو'
+            };
+            return labels[category] || category;
+        }
+        
+        function showToast(message, type = 'info') {
+            // Simple toast implementation
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                z-index: 1000;
+                animation: fadeInOut 3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadNotes);
+        
+        // Setup event listeners
+        document.getElementById('noteContent').addEventListener('input', updateCharCount);
+        
+        // Close editor with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('noteEditor').classList.contains('active')) {
+                closeEditor();
+            }
+        });
+    </script>
+</body>
+</html>
