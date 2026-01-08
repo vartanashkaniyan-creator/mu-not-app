@@ -1,59 +1,22 @@
 /**
- * 🏎️ Engine.js – موتور مرکزی App Builder
- * نسخه 3.1.0 – پیشرفته و ماژولار
+ * 🏗️ Engine.js – هسته پیشرفته اپ‌ها
+ * نسخه 3.1.0
+ * Mobile + Web | Modular | History & Memory
  */
 
 class Engine {
     constructor() {
-        this.screen = 'home';
-        this.output = [];
-        this.modules = {}; // ماژول‌های جداگانه (note, list, calculator, todo)
-        console.log('⚡ Engine initialized');
+        this.history = [];
+        this.memory = 0;
+        this.notes = [];
+        this.todo = [];
+        this.core = window.AppCore || null;
     }
 
-    // ثبت ماژول
-    registerModule(name, module) {
-        if (this.modules[name]) {
-            console.warn(`Module "${name}" قبلاً ثبت شده`);
-            return;
-        }
-        this.modules[name] = module;
-        console.log(`✅ Module "${name}" registered`);
-    }
-
-    // اجرای دستور عمومی
-    run(input = '') {
-        input = input.trim();
-
-        if (!input) return this.clearOutput();
-
-        // شناسایی ماژول‌های اختصاصی
-        if (/^note/i.test(input) || /یادداشت/.test(input)) {
-            this.screen = 'note';
-        } else if (/^list/i.test(input) || /لیست/.test(input)) {
-            this.screen = 'list';
-        } else if (/^calc/i.test(input) || /محاسبه/.test(input)) {
-            this.screen = 'calculator';
-        } else {
-            this.screen = 'home';
-        }
-
-        // دستور print
-        if (/^print /i.test(input)) {
-            const text = input.replace(/^print /i, '');
-            this.output.push(text);
-        }
-
-        return { screen: this.screen, output: this.output };
-    }
-
-    // محاسبات ریاضی امن
-    calculate(expr) {
+    /* ---------- Calculator ---------- */
+    calc(expr) {
         try {
-            if (!expr) throw new Error('عبارت خالی است');
-
-            // جایگزینی نمادها
-            const safeExpr = expr
+            let safeExpr = expr
                 .replace(/×/g, '*')
                 .replace(/÷/g, '/')
                 .replace(/π/g, Math.PI)
@@ -65,41 +28,90 @@ class Engine {
                 .replace(/log/g, 'Math.log10')
                 .replace(/ln/g, 'Math.log');
 
-            // امنیت اولیه
-            if (!/^[0-9+\-*/().\sMathsqrtsincostantlogπe]+$/.test(safeExpr)) {
+            if (!/^[0-9+\-*/().\sMathsqrtsincostantlogπe]+$/.test(safeExpr))
                 throw new Error('عبارت نامعتبر');
-            }
 
             const result = Function('"use strict";return(' + safeExpr + ')')();
             const rounded = Math.round(result * 1e8) / 1e8;
 
-            // ذخیره در خروجی
-            this.output.unshift(`= ${rounded}`);
+            this.history.unshift({ type: 'calc', expr, result: rounded, ts: new Date().toISOString() });
+            if (this.history.length > 100) this.history.pop();
+
+            this.log('Calculator', { expr, result: rounded });
             return rounded;
         } catch (err) {
-            const msg = `⚠️ خطا: ${err.message}`;
-            this.output.unshift(msg);
-            console.error(msg);
-            return null;
+            return this.error('Calc Error', err.message);
         }
     }
 
-    // پاکسازی خروجی
-    clearOutput() {
-        this.output = [];
-        return this.output;
+    /* ---------- Memory ---------- */
+    memStore(value) { this.memory = value; this.log('Memory Store', value); }
+    memRecall() { this.log('Memory Recall', this.memory); return this.memory; }
+    memClear() { this.memory = 0; this.log('Memory Clear', 0); }
+
+    /* ---------- Notes ---------- */
+    notesAdd(title, content, category = 'عمومی') {
+        if (!title && !content) return this.error('Note Error', 'یادداشت خالی');
+        const note = { id: Date.now(), title, content, category, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        this.notes.unshift(note);
+        if (this.notes.length > 100) this.notes.pop();
+        this.log('Notes Add', note);
+        return note;
+    }
+    notesEdit(id, title, content, category) {
+        const note = this.notes.find(n => n.id === id);
+        if (!note) return this.error('Note Error', 'یادداشت یافت نشد');
+        note.title = title; note.content = content; note.category = category; note.updatedAt = new Date().toISOString();
+        this.log('Notes Edit', note);
+        return note;
+    }
+    notesDelete(id) {
+        this.notes = this.notes.filter(n => n.id !== id);
+        this.log('Notes Delete', { id });
     }
 
-    // دریافت وضعیت
-    getStatus() {
-        return {
-            screen: this.screen,
-            outputCount: this.output.length,
-            modules: Object.keys(this.modules)
-        };
+    /* ---------- Todo ---------- */
+    todoAdd(task) {
+        if (!task) return this.error('Todo Error', 'کار خالی است');
+        const item = { id: Date.now(), task, done: false };
+        this.todo.unshift(item);
+        this.log('Todo Add', item);
+        return item;
+    }
+    todoToggle(id) {
+        const item = this.todo.find(t => t.id === id);
+        if (!item) return this.error('Todo Error', 'آیتم یافت نشد');
+        item.done = !item.done;
+        this.log('Todo Toggle', item);
+        return item;
+    }
+    todoDelete(id) {
+        this.todo = this.todo.filter(t => t.id !== id);
+        this.log('Todo Delete', { id });
+    }
+
+    /* ---------- History ---------- */
+    getHistory(limit = 50) { return this.history.slice(0, limit); }
+
+    /* ---------- Logging & Error ---------- */
+    log(module, data) {
+        const entry = { ts: new Date().toISOString(), module, data };
+        if (this.core) this.core.logs.push(entry);
+        console.log(`🟢 [Engine] ${module}`, data);
+    }
+    error(module, msg) {
+        const err = { id: `ERR_${Date.now()}`, module, msg, ts: new Date().toISOString() };
+        if (this.core) this.core.errors.push(err);
+        console.error(`🔴 [Engine] ${module}:`, msg);
+        return err;
+    }
+
+    /* ---------- Export State ---------- */
+    toJSON() {
+        return { history: this.history, memory: this.memory, notes: this.notes, todo: this.todo };
     }
 }
 
-// نمونه جهانی
+// نمونه آماده و ثبت در سطح جهانی
 window.Engine = new Engine();
-console.log('✅ Engine.js 3.1.0 Loaded');
+console.log('⚡ Engine.js پیشرفته بارگذاری شد');
