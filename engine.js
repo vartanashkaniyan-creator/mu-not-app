@@ -1,7 +1,6 @@
 /**
- * 🏗️ Engine.js – هسته پیشرفته اپ‌ها
- * نسخه 3.1.0
- * Mobile + Web | Modular | History & Memory
+ * ⚙️ Engine.js – هسته پیشرفته اپ‌ها (نسخه اصلاح‌شده)
+ * نسخه 3.1.1
  */
 
 class Engine {
@@ -58,16 +57,25 @@ class Engine {
         this.log('Notes Add', note);
         return note;
     }
+
     notesEdit(id, title, content, category) {
         const note = this.notes.find(n => n.id === id);
         if (!note) return this.error('Note Error', 'یادداشت یافت نشد');
-        note.title = title; note.content = content; note.category = category; note.updatedAt = new Date().toISOString();
+        note.title = title;
+        note.content = content;
+        note.category = category;
+        note.updatedAt = new Date().toISOString();
         this.log('Notes Edit', note);
         return note;
     }
+
     notesDelete(id) {
         this.notes = this.notes.filter(n => n.id !== id);
         this.log('Notes Delete', { id });
+    }
+
+    notesGetAll() {
+        return this.notes;
     }
 
     /* ---------- Todo ---------- */
@@ -78,6 +86,7 @@ class Engine {
         this.log('Todo Add', item);
         return item;
     }
+
     todoToggle(id) {
         const item = this.todo.find(t => t.id === id);
         if (!item) return this.error('Todo Error', 'آیتم یافت نشد');
@@ -85,13 +94,20 @@ class Engine {
         this.log('Todo Toggle', item);
         return item;
     }
+
     todoDelete(id) {
         this.todo = this.todo.filter(t => t.id !== id);
         this.log('Todo Delete', { id });
     }
 
+    todoGetAll() {
+        return this.todo;
+    }
+
     /* ---------- History ---------- */
-    getHistory(limit = 50) { return this.history.slice(0, limit); }
+    getHistory(limit = 50) {
+        return this.history.slice(0, limit);
+    }
 
     /* ---------- Logging & Error ---------- */
     log(module, data) {
@@ -99,6 +115,7 @@ class Engine {
         if (this.core) this.core.logs.push(entry);
         console.log(`🟢 [Engine] ${module}`, data);
     }
+
     error(module, msg) {
         const err = { id: `ERR_${Date.now()}`, module, msg, ts: new Date().toISOString() };
         if (this.core) this.core.errors.push(err);
@@ -108,10 +125,14 @@ class Engine {
 
     /* ---------- Export State ---------- */
     toJSON() {
-        return { history: this.history, memory: this.memory, notes: this.notes, todo: this.todo };
+        return {
+            history: this.history,
+            memory: this.memory,
+            notes: this.notes,
+            todo: this.todo
+        };
     }
 }
 
-// نمونه آماده و ثبت در سطح جهانی
 window.Engine = new Engine();
-console.log('⚡ Engine.js پیشرفته بارگذاری شد');
+console.log('⚡ Engine.js اصلاح‌شده بارگذاری شد');
