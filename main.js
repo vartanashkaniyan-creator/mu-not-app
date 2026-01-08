@@ -1,135 +1,54 @@
-// main.js - ADVANCED OUTPUT & PLUGIN SUPPORT
-
 let currentScreen = "home";
 let currentOutput = [];
 
-// شروع برنامه
-window.addEventListener("DOMContentLoaded", () => {
-  renderScreen("home");
-});
+window.onload = () => render();
 
-// اجرای دستور
-function runApp(command) {
-  const result = window.runEngine(command || "");
+function runApp(cmd) {
+  const result = runEngine(cmd);
 
-  // تغییر صفحه
-  if (result.screen) {
-    currentScreen = result.screen;
-    renderScreen(currentScreen);
-  }
+  currentScreen = result.screen;
+  currentOutput = result.output;
 
-  // نمایش خروجی
-  if (Array.isArray(result.output)) {
-    currentOutput = result.output;
-    renderOutput();
-  }
-
-  // نمایش alert
-  if (Array.isArray(result.alerts)) {
-    result.alerts.forEach(msg => setTimeout(() => alert(msg), 50));
-  }
-
-  // اجرای پلاگین
-  if (Array.isArray(result.pluginCommands) && window.PluginSystem) {
-    result.pluginCommands.forEach(pcmd => {
-      const res = window.PluginSystem.execute(pcmd);
-      setTimeout(() => alert(res), 100);
-    });
-  }
+  render();
 }
 
-// رندر صفحه
-function renderScreen(screen) {
+function render() {
   const app = document.getElementById("app");
-  if (!app) return;
-
   app.innerHTML = "";
 
-  const outputBox = document.createElement("div");
-  outputBox.id = "outputBox";
-  outputBox.style.marginBottom = "20px";
-  app.appendChild(outputBox);
+  // ===== OUTPUT =====
+  const out = document.createElement("div");
+  out.style.border = "1px solid #444";
+  out.style.padding = "10px";
+  out.style.marginBottom = "10px";
 
-  if (screen === "home") {
-    const textarea = document.createElement("textarea");
-    textarea.id = "commandInput";
-    textarea.placeholder = "دستور بنویس…";
-    app.appendChild(textarea);
-
-    const btn = document.createElement("button");
-    btn.textContent = "اجرا";
-    btn.onclick = () => runApp(textarea.value);
-    app.appendChild(btn);
-  }
-
-  if (screen === "note") {
-    const textarea = document.createElement("textarea");
-    textarea.id = "noteText";
-    textarea.placeholder = "یادداشت…";
-    textarea.value = localStorage.getItem("note") || "";
-    app.appendChild(textarea);
-
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "ذخیره";
-    saveBtn.onclick = () => {
-      localStorage.setItem("note", textarea.value);
-      alert("ذخیره شد ✅");
-    };
-    app.appendChild(saveBtn);
-
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "بازگشت";
-    backBtn.onclick = () => runApp("screen home");
-    app.appendChild(backBtn);
-  }
-
-  if (screen === "list") {
-    const input = document.createElement("textarea");
-    input.id = "itemInput";
-    input.placeholder = "آیتم جدید…";
-    app.appendChild(input);
-
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "اضافه";
-    addBtn.onclick = () => {
-      const val = input.value.trim();
-      if (!val) return;
-      const list = JSON.parse(localStorage.getItem("items") || "[]");
-      list.push(val);
-      localStorage.setItem("items", JSON.stringify(list));
-      renderScreen("list");
-      renderOutput();
-    };
-    app.appendChild(addBtn);
-
-    const ul = document.createElement("ul");
-    const items = JSON.parse(localStorage.getItem("items") || "[]");
-    items.forEach((item, i) => {
-      const li = document.createElement("li");
-      li.textContent = `${i + 1}. ${item}`;
-      ul.appendChild(li);
-    });
-    app.appendChild(ul);
-
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "بازگشت";
-    backBtn.onclick = () => runApp("screen home");
-    app.appendChild(backBtn);
-  }
-
-  renderOutput();
-}
-
-// رندر خروجی
-function renderOutput() {
-  const box = document.getElementById("outputBox");
-  if (!box) return;
-  box.innerHTML = "";
-  currentOutput.forEach(line => {
-    const p = document.createElement("p");
-    p.textContent = line;
-    p.style.padding = "6px 0";
-    p.style.borderBottom = "1px solid #333";
-    box.appendChild(p);
+  currentOutput.forEach(t => {
+    const p = document.createElement("div");
+    p.textContent = t;
+    out.appendChild(p);
   });
+
+  app.appendChild(out);
+
+  // ===== HOME =====
+  if (currentScreen === "home") {
+    const t = document.createElement("textarea");
+    t.id = "cmd";
+    app.appendChild(t);
+
+    const b = document.createElement("button");
+    b.textContent = "اجرا";
+    b.onclick = () => runApp(t.value);
+    app.appendChild(b);
+  }
+
+  // ===== NOTE =====
+  if (currentScreen === "note") {
+    app.innerHTML += "<h2>صفحه یادداشت</h2>";
+  }
+
+  // ===== LIST =====
+  if (currentScreen === "list") {
+    app.innerHTML += "<h2>صفحه لیست</h2>";
+  }
 }
