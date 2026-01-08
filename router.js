@@ -1,81 +1,69 @@
 /**
- * 🛣 Router.js – مدیریت مسیرها و SPA پیشرفته
- * نسخه 3.1.0 – Mobile & PWA Friendly
+ * 🧭 Router.js – مدیریت مسیرها
+ * نسخه 3.0.0
+ * SPA-friendly | History API | Default & Fallback Routes
  */
 
 const Router = (() => {
     const routes = {};
-    let defaultRoute = null;
+    let defaultRoute = '/home';
 
+    // ثبت مسیر جدید
     function register(path, callback) {
         if (typeof callback !== 'function') {
-            console.warn(`⚠️ مسیر ${path} فاقد callback معتبر است`);
+            console.error(`Router: Callback برای مسیر "${path}" معتبر نیست`);
             return;
         }
         routes[path] = callback;
+        console.log(`Router: مسیر "${path}" ثبت شد`);
     }
 
+    // مسیر پیش‌فرض
     function setDefault(path) {
         defaultRoute = path;
     }
 
-    function navigate(path, options = {}) {
+    // ناوبری به مسیر مشخص
+    function navigate(path) {
         const cb = routes[path] || routes[defaultRoute];
         if (!cb) {
-            console.error(`❌ مسیر "${path}" تعریف نشده`);
+            console.warn(`Router: مسیر "${path}" یافت نشد و مسیر پیش‌فرض هم تعریف نشده`);
             return;
         }
-
-        // اجرا callback
         cb();
-
-        // تاریخچه مرورگر (PushState)
-        if (!options.skipHistory) {
-            window.history.pushState({ path }, '', path);
-        }
+        window.history.pushState({ path }, '', path);
+        console.log(`Router: حرکت به "${path}"`);
     }
 
+    // راه‌اندازی Router
     function init() {
-        // مسیر اولیه صفحه
-        const initialPath = location.pathname || defaultRoute;
-        if (initialPath) navigate(initialPath, { skipHistory: true });
-
-        // مدیریت دکمه‌های back/forward مرورگر
+        // گوش دادن به popstate مرورگر
         window.addEventListener('popstate', (e) => {
             const path = e.state?.path || defaultRoute;
             const cb = routes[path] || routes[defaultRoute];
             if (cb) cb();
         });
 
-        // اتصال لینک‌های data-route به navigate
-        document.body.addEventListener('click', (e) => {
-            const target = e.target.closest('[data-route]');
-            if (!target) return;
-            e.preventDefault();
-            const route = target.getAttribute('data-route');
-            if (route) navigate(route);
-        });
-
-        console.log('⚡ Router initialized');
+        // مسیر اولیه
+        const initialPath = location.pathname || defaultRoute;
+        navigate(initialPath);
     }
 
-    // تغییر مسیر بدون reload
-    function replace(path) {
-        const cb = routes[path] || routes[defaultRoute];
-        if (!cb) return;
-        cb();
-        window.history.replaceState({ path }, '', path);
-    }
-
+    // Public API
     return {
         register,
-        setDefault,
         navigate,
-        replace,
+        setDefault,
         init
     };
 })();
 
-// ثبت جهانی
+/* ---------- نمونه استفاده ----------
+Router.register('/home', () => UI.load('home'));
+Router.register('/notes', () => UI.load('notes'));
+Router.setDefault('/home');
+Router.init();
+------------------------------------ */
+
 window.Router = Router;
-console.log('✅ Router.js 3.1.0 Loaded');
+console.log('🧭 Router.js بارگذاری شد');
