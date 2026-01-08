@@ -1,17 +1,16 @@
 /**
  * 🧩 Templates.js – موتور قالب اپلیکیشن
- * نسخه 3.1.0 – اصلاح‌شده
+ * نسخه 3.1.0
  */
 
 const Templates = (() => {
 
-    function baseTemplate({ title = '', body = '', scripts = '' }) {
+    function baseTemplate({ title = '', body = '' }) {
         return `
         <div class="card">
             <h2 class="center">${title}</h2>
             <div class="card-body">${body}</div>
         </div>
-        ${scripts}
         `;
     }
 
@@ -94,4 +93,4 @@ const Templates = (() => {
 })();
 
 window.Templates = Templates;
-console.log('🧩 Templates.js اصلاح‌شده بارگذاری شد');
+console.log('🧩 Templates.js بارگذاری شد');
