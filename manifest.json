@@ -1,1 +1,84 @@
 
+{
+  "name": "اپ‌ساز حرفه‌ای",
+  "short_name": "AppBuilder",
+  "description": "ساخت اپلیکیشن موبایل بدون کدنویسی - 25 اپ آماده",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#667eea",
+  "background_color": "#764ba2",
+  "icons": [
+    {
+      "src": "icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ماشین حساب",
+      "short_name": "حساب",
+      "description": "ماشین حساب پیشرفته",
+      "url": "./index.html?app=calculator",
+      "icons": [{ "src": "icons/calc-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "یادداشت‌نگار",
+      "short_name": "یادداشت",
+      "description": "مدیریت یادداشت‌ها",
+      "url": "./index.html?app=notes",
+      "icons": [{ "src": "icons/notes-icon.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "protocol_handlers": []
+}
