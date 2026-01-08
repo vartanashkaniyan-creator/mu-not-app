@@ -1,1 +1,36 @@
 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>اپ‌ساز – App Builder</title>
+  <meta name="theme-color" content="#4CAF50" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <noscript>برای استفاده از این اپلیکیشن، جاوااسکریپت باید فعال باشد.</noscript>
+
+  <div id="app"></div>
+
+  <script src="app.library.js"></script>
+  <script src="i18n.js"></script>
+  <script src="engine.js"></script>
+  <script src="storage.js"></script>
+  <script src="Templates.js"></script>
+  <script src="Router.js"></script>
+  <script src="UI.js"></script>
+  <script src="main.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    document.querySelectorAll('.lang-switcher button')?.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang');
+        window.I18n?.setLanguage(lang);
+      });
+    });
+  </script>
+</body>
+</html>
