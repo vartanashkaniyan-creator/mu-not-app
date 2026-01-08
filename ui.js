@@ -1,6 +1,6 @@
-// UI.js – رابط کاربری اصلاح‌شده
 const UI = {
     container: null,
+
     init(containerId = 'app') {
         this.container = document.getElementById(containerId);
         if (!this.container) {
@@ -29,24 +29,24 @@ const UI = {
 
         switch (screen) {
             case 'home':
-                this.container.innerHTML = window.Templates.home(data.apps || []);
+                this.container.innerHTML = Templates.home(data.apps || []);
                 break;
             case 'notes':
-                this.container.innerHTML = window.Templates.notes();
+                this.container.innerHTML = Templates.notes();
                 this.bindNotesEvents();
                 this.renderNotes();
                 break;
             case 'calculator':
-                this.container.innerHTML = window.Templates.calculator();
+                this.container.innerHTML = Templates.calculator();
                 this.bindCalculatorEvents();
                 break;
             case 'todo':
-                this.container.innerHTML = window.Templates.todo();
+                this.container.innerHTML = Templates.todo();
                 this.bindTodoEvents();
                 this.renderTodo();
                 break;
             case 'preview':
-                this.container.innerHTML = window.Templates.preview(data.html || '');
+                this.container.innerHTML = Templates.preview(data.html || '');
                 break;
             default:
                 this.container.innerHTML = `<p class="center">صفحه یافت نشد</p>`;
@@ -72,7 +72,7 @@ const UI = {
                 updatedAt: new Date().toISOString()
             };
             if (!note.title && !note.content) return alert('یادداشت خالی است');
-            window.Storage.save(note);
+            Storage.save(note);
             this.renderNotes();
             titleInput.value = '';
             contentInput.value = '';
@@ -88,7 +88,7 @@ const UI = {
         const container = document.getElementById('notes-list');
         if (!container) return;
 
-        const notes = window.Storage.getAll();
+        const notes = Storage.getAll();
         container.innerHTML = '';
 
         if (!notes.length) {
@@ -104,21 +104,13 @@ const UI = {
                 <p>${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
                 <small>${new Date(note.updatedAt).toLocaleDateString('fa-IR')}</small>
                 <div class="note-actions">
-                    <button class="edit-btn">✏️ ویرایش</button>
                     <button class="delete-btn">🗑️ حذف</button>
                 </div>
             `;
 
-            div.querySelector('.edit-btn').onclick = () => {
-                document.getElementById('note-title').value = note.title;
-                document.getElementById('note-content').value = note.content;
-                document.getElementById('note-category').value = note.category;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-
             div.querySelector('.delete-btn').onclick = () => {
                 if (!confirm('آیا مطمئن هستید؟')) return;
-                window.Storage.remove(note.id); // اصلاح‌شده
+                Storage.remove(note.id);
                 this.renderNotes();
             };
 
@@ -136,7 +128,7 @@ const UI = {
         runBtn.onclick = () => {
             const val = input.value.trim();
             if (!val) return;
-            const res = window.Engine.calc(val);
+            const res = Engine.calc(val);
             resultDiv.textContent = res;
         };
     },
@@ -151,7 +143,7 @@ const UI = {
         addBtn.onclick = () => {
             const val = input.value.trim();
             if (!val) return;
-            window.Engine.todoAdd(val);
+            Engine.todoAdd(val);
             this.renderTodo();
             input.value = '';
         };
@@ -162,7 +154,7 @@ const UI = {
         if (!list) return;
 
         list.innerHTML = '';
-        const todos = window.Engine.todo || [];
+        const todos = Engine.todoGetAll();
         todos.forEach(todo => {
             const li = document.createElement('div');
             li.className = 'list-item';
@@ -173,4 +165,4 @@ const UI = {
 };
 
 window.UI = UI;
-console.log('✅ UI.js اصلاح‌شده بارگذاری شد');
+console.log('✅ UI.js بارگذاری شد');
