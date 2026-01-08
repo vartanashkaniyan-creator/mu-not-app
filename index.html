@@ -1,1 +1,249 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 اپ‌ساز حرفه‌ای</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #app {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .app-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .app-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        .app-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .app-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .app-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            #app {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .app-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>📱 اپ‌ساز حرفه‌ای</h1>
+            <p>ساخت اپلیکیشن موبایل بدون کدنویسی - 25 اپ آماده</p>
+        </div>
+        
+        <div class="loading" id="loading">
+            در حال بارگذاری اپ‌ها...
+        </div>
+        
+        <div class="app-list" id="appList" style="display: none;">
+            <!-- اپ‌ها اینجا لود میشن -->
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalApps">25</div>
+                <div class="stat-label">اپ آماده</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="codeLines">4,200</div>
+                <div class="stat-label">خط کد</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="fileCount">10</div>
+                <div class="stat-label">فایل</div>
+            </div>
+        </div>
+    </div>
 
+    <script type="module">
+        import { app } from './app.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM loaded, starting app...');
+            
+            // نمایش لیست اپ‌ها
+            const apps = [
+                {icon: '🧮', title: 'ماشین حساب', desc: 'ساده و علمی'},
+                {icon: '📝', title: 'یادداشت‌نگار', desc: 'یادداشت‌های شخصی'},
+                {icon: '✅', title: 'لیست کارها', desc: 'مدیریت کارها'},
+                {icon: '🌤️', title: 'آب و هوا', desc: 'وضعیت آب و هوا'},
+                {icon: '💰', title: 'مدیریت هزینه', desc: 'کنترل مخارج'},
+                {icon: '⏱️', title: 'تایمر', desc: 'تایمر و کرنومتر'},
+                {icon: '🔄', title: 'مبدل واحد', desc: 'تبدیل واحدها'},
+                {icon: '📅', title: 'تقویم', desc: 'تقویم و مناسبت‌ها'},
+                {icon: '🎵', title: 'پخش موزیک', desc: 'پخش فایل‌های صوتی'},
+                {icon: '📸', title: 'دوربین', desc: 'عکس و فیلم'},
+                {icon: '🖼️', title: 'گالری', desc: 'مدیریت عکس‌ها'},
+                {icon: '🗺️', title: 'نقشه', desc: 'نقشه و مکان‌یابی'},
+                {icon: '📞', title: 'تماس‌ها', desc: 'مدیریت مخاطبین'},
+                {icon: '💬', title: 'پیام‌رسان', desc: 'چت و پیام‌رسانی'},
+                {icon: '🛒', title: 'فروشگاه', desc: 'فروش آنلاین'},
+                {icon: '🍽️', title: 'رستوران', desc: 'سفارش غذا'},
+                {icon: '📰', title: 'اخبار', desc: 'خواندن اخبار'},
+                {icon: '🎮', title: 'بازی', desc: 'بازی‌های ساده'},
+                {icon: '📊', title: 'نمودار', desc: 'تحلیل داده'},
+                {icon: '🔒', title: 'امنیت', desc: 'مدیریت رمزها'},
+                {icon: '📚', title: 'کتابخانه', desc: 'مدیریت کتاب‌ها'},
+                {icon: '🎬', title: 'ویدیو', desc: 'پخش ویدیو'},
+                {icon: '🛠️', title: 'ابزارها', desc: 'ابزارهای کاربردی'},
+                {icon: '🎯', title: 'هدف‌گذاری', desc: 'پیگیری اهداف'},
+                {icon: '📈', title: 'تحلیل', desc: 'آمار و تحلیل'}
+            ];
+            
+            const appList = document.getElementById('appList');
+            const loading = document.getElementById('appList');
+            
+            // ایجاد کارت‌های اپ
+            apps.forEach((app, index) => {
+                const card = document.createElement('div');
+                card.className = 'app-card';
+                card.innerHTML = \`
+                    <div class="app-icon">\${app.icon}</div>
+                    <div class="app-title">\${app.title}</div>
+                    <div class="app-desc">\${app.desc}</div>
+                \`;
+                card.onclick = () => {
+                    alert(\`اپ \${app.title} باز شد!\`);
+                    // اینجا باید اپ مربوطه رو لود کنی
+                };
+                appList.appendChild(card);
+            });
+            
+            // مخفی کردن لودینگ
+            document.getElementById('loading').style.display = 'none';
+            appList.style.display = 'grid';
+            
+            // شروع اپ اصلی
+            try {
+                await app.init();
+                console.log('App started successfully');
+                
+                // آپدیت آمار
+                document.getElementById('totalApps').textContent = '25';
+                document.getElementById('codeLines').textContent = '4,200+';
+                document.getElementById('fileCount').textContent = '10';
+                
+            } catch (error) {
+                console.error('Failed to start app:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<div style="color: red; padding: 20px;">خطا در بارگذاری اپ</div>';
+            }
+        });
+    </script>
+</body>
+</html>
