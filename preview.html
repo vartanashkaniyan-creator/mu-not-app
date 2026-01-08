@@ -1,1 +1,598 @@
 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>پیش‌نمایش اپ - AppBuilder</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Preview Page Specific Styles */
+        .preview-page {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .preview-header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .preview-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .preview-subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .preview-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .preview-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .preview-toolbar {
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .preview-device-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .device-selector {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .device-selector option {
+            background: #333;
+            color: white;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .preview-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: auto;
+        }
+        
+        #previewDevice {
+            transition: all 0.3s ease;
+        }
+        
+        .preview-footer {
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .preview-stats {
+            display: flex;
+            gap: 20px;
+            opacity: 0.8;
+        }
+        
+        .preview-back {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .preview-container {
+                border-radius: 0;
+            }
+            
+            .preview-toolbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .preview-device-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .preview-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Button Styles for Preview */
+        .preview-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .preview-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .preview-btn.primary {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+        
+        .preview-btn.primary:hover {
+            background: #45a049;
+        }
+        
+        .preview-btn.danger {
+            background: #f44336;
+            border-color: #f44336;
+        }
+        
+        .preview-btn.danger:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body class="preview-page">
+    <!-- Back Button -->
+    <a href="index.html" class="preview-back preview-btn">
+        <i class="fas fa-arrow-right"></i>
+        بازگشت
+    </a>
+    
+    <!-- Header -->
+    <div class="preview-header">
+        <h1 class="preview-title">
+            <i class="fas fa-mobile-alt"></i>
+            پیش‌نمایش اپ
+        </h1>
+        <p class="preview-subtitle">نمایش زنده اپلیکیشن روی دستگاه‌های مختلف</p>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="preview-content">
+        <div class="preview-container">
+            <!-- Toolbar -->
+            <div class="preview-toolbar">
+                <div class="preview-device-info">
+                    <select class="device-selector" id="deviceSelect" onchange="changeDevice(this.value)">
+                        <option value="iphone">📱 iPhone 13</option>
+                        <option value="samsung">📱 Samsung Galaxy</option>
+                        <option value="pixel" selected>📱 Google Pixel</option>
+                        <option value="ipad">📱 iPad</option>
+                        <option value="custom">📱 دستگاه سفارشی</option>
+                    </select>
+                    
+                    <div class="preview-stats">
+                        <span id="deviceSize">375×812</span>
+                        <span id="zoomLevel">100%</span>
+                        <span id="fpsCounter">60 FPS</span>
+                    </div>
+                </div>
+                
+                <div class="preview-actions">
+                    <button class="preview-btn" onclick="zoomOut()" title="کوچک‌نمایی">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="preview-btn" onclick="zoomIn()" title="بزرگ‌نمایی">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="preview-btn" onclick="rotateDevice()" title="چرخش صفحه">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="preview-btn" onclick="toggleFullscreen()" title="حالت تمام‌صفحه">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="preview-btn primary" onclick="reloadPreview()" title="بارگذاری مجدد">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Preview Area -->
+            <div class="preview-area">
+                <div id="previewDevice">
+                    <!-- Device frame will be inserted here by preview.js -->
+                    <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">
+                        <i class="fas fa-mobile-alt" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <h3>اپلیکیشن مورد نظر برای پیش‌نمایش انتخاب نشده</h3>
+                        <p style="margin-top: 10px;">لطفاً از صفحه اصلی یک اپ را برای پیش‌نمایش انتخاب کنید</p>
+                        <button class="preview-btn primary" onclick="goToApps()" style="margin-top: 20px;">
+                            <i class="fas fa-th-large"></i>
+                            مشاهده اپ‌ها
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>در حال بارگذاری پیش‌نمایش...</p>
+                    <p id="loadingProgress" style="font-size: 12px; margin-top: 10px;"></p>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="preview-footer">
+                <div>
+                    <span>AppBuilder Preview v3.0.0</span>
+                    <span style="margin-right: 20px; opacity: 0.7;">حالت: <span id="previewMode">آفلاین</span></span>
+                </div>
+                <div class="preview-stats">
+                    <span>حافظه: <span id="memoryUsage">--</span> MB</span>
+                    <span>زمان: <span id="previewTime">00:00</span></span>
+                    <span>تعداد عناصر: <span id="elementCount">--</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="core.js"></script>
+    <script src="preview.js"></script>
+    <script>
+        // Preview Page JavaScript
+        let previewManager = null;
+        let previewTimer = null;
+        let startTime = Date.now();
+        
+        // Initialize preview
+        function initPreview() {
+            // Initialize Preview Manager
+            if (window.PreviewManager) {
+                previewManager = PreviewManager;
+                previewManager.init('previewDevice');
+                
+                // Check URL parameters for app to preview
+                const urlParams = new URLSearchParams(window.location.search);
+                const appId = urlParams.get('app');
+                
+                if (appId) {
+                    loadAppPreview(appId);
+                }
+                
+                // Start timer
+                startPreviewTimer();
+                
+                // Start memory monitor
+                startMemoryMonitor();
+                
+                // Update preview mode
+                updatePreviewMode();
+                
+                console.log('Preview page initialized');
+            } else {
+                console.error('PreviewManager not loaded');
+                setTimeout(initPreview, 500);
+            }
+        }
+        
+        // Load app preview
+        async function loadAppPreview(appId) {
+            showLoading(true, 'در حال بارگذاری اپ...');
+            
+            try {
+                // Get app data
+                let appData = null;
+                
+                if (window.AppStorage) {
+                    const apps = await AppStorage.get('user_apps') || [];
+                    appData = apps.find(a => a.id === appId);
+                }
+                
+                if (!appData && window.AppEngine) {
+                    const defaultApps = AppEngine.getDefaultApps();
+                    appData = defaultApps.find(a => a.id === appId);
+                }
+                
+                if (!appData) {
+                    throw new Error('اپ یافت نشد');
+                }
+                
+                // Update UI
+                document.querySelector('.preview-title').innerHTML = `
+                    <i class="fas fa-mobile-alt"></i>
+                    پیش‌نمایش: ${appData.name}
+                `;
+                
+                // Load preview
+                const success = await previewManager.loadPreview(appId, {
+                    mockData: {
+                        previewMode: true,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+                
+                if (success) {
+                    // Update stats
+                    updateDeviceInfo();
+                    
+                    // Hide loading
+                    showLoading(false);
+                    
+                    // Show success message
+                    showToast(`پیش‌نمایش "${appData.name}" بارگذاری شد`, 'success');
+                }
+                
+            } catch (error) {
+                console.error('Failed to load preview:', error);
+                showLoading(false);
+                showToast(`خطا: ${error.message}`, 'error');
+            }
+        }
+        
+        // Change device
+        function changeDevice(deviceId) {
+            if (previewManager) {
+                previewManager.changeDevice(deviceId);
+                updateDeviceInfo();
+            }
+        }
+        
+        // Zoom controls
+        function zoomIn() {
+            if (previewManager) {
+                previewManager.changeZoom(0.25);
+                updateZoomLevel();
+            }
+        }
+        
+        function zoomOut() {
+            if (previewManager) {
+                previewManager.changeZoom(-0.25);
+                updateZoomLevel();
+            }
+        }
+        
+        // Rotate device
+        function rotateDevice() {
+            if (previewManager) {
+                previewManager.rotateDevice();
+            }
+        }
+        
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            if (previewManager) {
+                previewManager.toggleFullscreen();
+            }
+        }
+        
+        // Reload preview
+        function reloadPreview() {
+            if (previewManager) {
+                previewManager.reloadPreview();
+                showToast('پیش‌نمایش بارگذاری مجدد شد', 'info');
+            }
+        }
+        
+        // Go to apps page
+        function goToApps() {
+            window.location.href = 'index.html#apps';
+        }
+        
+        // Update device info
+        function updateDeviceInfo() {
+            if (!previewManager) return;
+            
+            const state = previewManager.getState();
+            const config = previewManager.getConfig();
+            const device = config.DEVICE_SIZES[state.currentDevice];
+            
+            document.getElementById('deviceSize').textContent = 
+                `${device.width}×${device.height}`;
+            
+            updateZoomLevel();
+        }
+        
+        // Update zoom level
+        function updateZoomLevel() {
+            if (!previewManager) return;
+            
+            const state = previewManager.getState();
+            document.getElementById('zoomLevel').textContent = 
+                `${Math.round(state.zoomLevel * 100)}%`;
+        }
+        
+        // Start preview timer
+        function startPreviewTimer() {
+            previewTimer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                document.getElementById('previewTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        // Start memory monitor
+        function startMemoryMonitor() {
+            if (performance.memory) {
+                setInterval(() => {
+                    const memory = performance.memory;
+                    const usedMB = Math.round(memory.usedJSHeapSize / 1048576);
+                    const totalMB = Math.round(memory.totalJSHeapSize / 1048576);
+                    
+                    document.getElementById('memoryUsage').textContent = 
+                        `${usedMB}/${totalMB}`;
+                }, 5000);
+            }
+        }
+        
+        // Update preview mode
+        function updatePreviewMode() {
+            const mode = navigator.onLine ? 'آنلاین' : 'آفلاین';
+            document.getElementById('previewMode').textContent = mode;
+            
+            // Update UI class
+            document.body.classList.toggle('online', navigator.onLine);
+            document.body.classList.toggle('offline', !navigator.onLine);
+        }
+        
+        // Show/hide loading overlay
+        function showLoading(show, message = '') {
+            const overlay = document.getElementById('loadingOverlay');
+            const progress = document.getElementById('loadingProgress');
+            
+            if (show) {
+                overlay.style.display = 'flex';
+                if (message) {
+                    progress.textContent = message;
+                }
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+        
+        // Show toast message
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                z-index: 1000;
+                animation: fadeInOut 3s ease;
+            `;
+            
+            // Add animation if not exists
+            if (!document.querySelector('#toast-animation')) {
+                const style = document.createElement('style');
+                style.id = 'toast-animation';
+                style.textContent = `
+                    @keyframes fadeInOut {
+                        0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                        10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                        90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Event Listeners
+        window.addEventListener('online', updatePreviewMode);
+        window.addEventListener('offline', updatePreviewMode);
+        
+        // Preview Manager events
+        document.addEventListener('preview:started', (e) => {
+            console.log('Preview started:', e.detail);
+            showToast('پیش‌نمایش شروع شد', 'success');
+        });
+        
+        document.addEventListener('preview:loaded', (e) => {
+            console.log('Preview loaded:', e.detail);
+            
+            // Update element count
+            try {
+                const iframe = e.detail.iframe;
+                const elementCount = iframe.contentDocument.querySelectorAll('*').length;
+                document.getElementById('elementCount').textContent = elementCount;
+            } catch (error) {
+                console.error('Failed to count elements:', error);
+            }
+        });
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPreview);
+        } else {
+            initPreview();
+        }
+    </script>
+</body>
+</html>
