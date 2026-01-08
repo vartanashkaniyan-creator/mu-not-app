@@ -1,54 +1,51 @@
-let currentScreen = "home";
-let currentOutput = [];
+/**
+ * 🏁 main.js – هسته راه‌اندازی اپ
+ * نسخه 3.0.0
+ */
 
-window.onload = () => render();
+(function () {
+    'use strict';
 
-function runApp(cmd) {
-  const result = runEngine(cmd);
+    console.log('🚀 main.js loaded');
 
-  currentScreen = result.screen;
-  currentOutput = result.output;
+    document.addEventListener('DOMContentLoaded', () => {
+        initApp();
+    });
 
-  render();
-}
+    function initApp() {
+        if (!window.Engine || !window.Router || !window.UI) {
+            console.error('❌ ماژول‌های اصلی آماده نیستند');
+            return;
+        }
 
-function render() {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
+        console.log('✅ ماژول‌ها آماده');
 
-  // ===== OUTPUT =====
-  const out = document.createElement("div");
-  out.style.border = "1px solid #444";
-  out.style.padding = "10px";
-  out.style.marginBottom = "10px";
+        // مقداردهی اولیه UI
+        UI.init();
 
-  currentOutput.forEach(t => {
-    const p = document.createElement("div");
-    p.textContent = t;
-    out.appendChild(p);
-  });
+        // ثبت مسیرها
+        Router.register('/home', () => UI.load('home'));
+        Router.register('/notes', () => UI.load('notes'));
+        Router.register('/calculator', () => UI.load('calculator'));
+        Router.register('/preview', () => UI.load('preview'));
 
-  app.appendChild(out);
+        // مسیر پیش‌فرض
+        Router.setDefault('/home');
 
-  // ===== HOME =====
-  if (currentScreen === "home") {
-    const t = document.createElement("textarea");
-    t.id = "cmd";
-    app.appendChild(t);
+        // راه‌اندازی Router
+        Router.init();
 
-    const b = document.createElement("button");
-    b.textContent = "اجرا";
-    b.onclick = () => runApp(t.value);
-    app.appendChild(b);
-  }
+        // دکمه‌های ناوبری SPA (موبایل فرندلی)
+        document.body.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-route]');
+            if (!target) return;
 
-  // ===== NOTE =====
-  if (currentScreen === "note") {
-    app.innerHTML += "<h2>صفحه یادداشت</h2>";
-  }
+            e.preventDefault();
+            const route = target.getAttribute('data-route');
+            if (route) Router.navigate(route);
+        });
 
-  // ===== LIST =====
-  if (currentScreen === "list") {
-    app.innerHTML += "<h2>صفحه لیست</h2>";
-  }
-}
+        console.log('🧩 App Initialized Successfully');
+    }
+
+})();
