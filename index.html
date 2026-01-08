@@ -1,37 +1,69 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>اپ‌ساز – App Builder</title>
-  <meta name="theme-color" content="#4CAF50" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اپ ساز حرفه‌ای</title>
+
+    <!-- استایل اصلی -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <noscript>برای استفاده از این اپلیکیشن، جاوااسکریپت باید فعال باشد.</noscript>
+    <div id="app"></div>
 
-  <!-- ناحیه اصلی اپلیکیشن -->
-  <div id="app"></div>
+    <!-- کتابخانه‌ها -->
+    <script src="app.library.js"></script>
 
-  <!-- اسکریپت‌ها به ترتیب صحیح -->
-  <script src="app.library.js"></script>
-  <script src="i18n.js"></script>
-  <script src="engine.js"></script>
-  <script src="storage.js"></script>
-  <script src="templates.js"></script>
-  <script src="router.js"></script>
-  <script src="UI.js"></script>
-  <script src="main.js"></script>
+    <!-- مدیریت زبان -->
+    <script src="i18n.js"></script>
 
-  <!-- سوییچ زبان -->
-  <script>
-    document.querySelectorAll('.lang-switcher button')?.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lang = btn.getAttribute('data-lang');
-        window.I18n?.setLanguage(lang);
-      });
-    });
-  </script>
+    <!-- موتور محاسبات و todo -->
+    <script src="engine.js"></script>
+
+    <!-- ذخیره‌سازی داده‌ها -->
+    <script src="storage.js"></script>
+
+    <!-- قالب‌ها -->
+    <script src="templates.js"></script>
+
+    <!-- رابط کاربری -->
+    <script src="UI.js"></script>
+
+    <!-- مدیریت مسیرها -->
+    <script src="router.js"></script>
+
+    <!-- مدیریت یادداشت‌ها -->
+    <script src="notes.js"></script>
+
+    <!-- پیش‌نمایش یادداشت (فقط برای preview.html، اگر لازم شد) -->
+    <script src="preview.js"></script>
+
+    <!-- اسکریپت عمومی اتصال ماژول‌ها -->
+    <script src="script.js"></script>
+
+    <!-- هسته اصلی راه‌اندازی اپ -->
+    <script src="main.js"></script>
+
+    <!-- ثبت Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service.worker.js')
+                .then(() => console.log('✅ Service Worker ثبت شد'))
+                .catch(err => console.error(err));
+        }
+    </script>
+
+    <!-- سوییچ زبان -->
+    <script>
+        document.querySelectorAll('.lang-switcher button')?.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                window.I18n?.setLanguage(lang);
+            });
+        });
+    </script>
 </body>
 </html>
